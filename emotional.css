@@ -1125,7 +1125,7 @@ nav{
 
 .humanoid-section{
     position:relative;
-    height:500px;
+    height:600px;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -1635,7 +1635,7 @@ nav{
     }
 
     .humanoid-section{
-        height:500px;
+        height:600px;
     }
 }
 
