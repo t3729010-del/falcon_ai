@@ -44,12 +44,13 @@ Emotional supporter chat interface for Falcon AI. Full-featured page with sideba
 
 ### Main Content
 - **Header:** "Emotional Supporter" title + subtitle
-- **Humanoid Section (`#humanoid-section`):**
-  - Static humanoid: `assets/falcon-humanoid.png`
+- **Humanoid elements (direct children of `<main class="main-content">`):**
+  - Static humanoid: `img#static-humanoid.humanoid` — `assets/falcon-humanoid.png`
   - Avatar container (`#avatar-container`): SVG-based interactive avatar with rings, eyes, brows, mouth
   - SVG gradients: `ambientGlow`, `hairGrad`
   - SVG filter: `glowFilter`
   - Image wrapper: `#avatar-image-wrapper` for uploaded photos
+  - Platform: `.platform` — glowing ellipse positioned below the humanoid image
 - **Emotion Grid:** 8 buttons — Happy, Calm, Motivated, Thoughtful, Confused, Sad, Overwhelmed, Frustrated
 - **Chat History:** `#chat-history`
 - **Voice Visualizer:** `#visualizer-section` with `<canvas id="visualizer-canvas">` and label

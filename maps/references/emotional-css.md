@@ -1,7 +1,7 @@
 # Technical Analysis of emotional.css
 
 ## 1. Overview
-Primary stylesheet for the Emotional Avatar supporter interface (2016 lines). Provides comprehensive styling for avatar components, voice interactions, chat system, session management, and the humanoid bot display.
+Primary stylesheet for the Emotional Avatar supporter interface (2003 lines). Provides comprehensive styling for avatar components, voice interactions, chat system, session management, and the humanoid bot display.
 
 ## 2. Architecture & Setup
 - **Reset**: Universal `*` reset with `box-sizing: border-box`
@@ -23,7 +23,7 @@ Primary stylesheet for the Emotional Avatar supporter interface (2016 lines). Pr
 - **Background**: Fixed radial gradients (purple + cyan) with `z-index:-10`.
 - **Particles**: 6 absolutely-positioned cyan dots with `floatParticle` animation.
 - **Navbar**: Logo with drop-shadow, cyan title with letter-spacing.
-- **Humanoid Section**: 500px height container with platform glow, humanoid SVG with triple drop-shadow and `floatBot`/`glowPulse` animations.
+- **Humanoid Display**: No wrapper section — elements are direct children of `<main class="main-content">`. Platform glow (`.platform`) uses `position:relative; margin: -60px auto 0 auto` to overlay the humanoid image's bottom. Humanoid SVG has triple drop-shadow and `floatBot`/`glowPulse` animations.
 - **Emotion Grid**: Auto-fit grid (`minmax(180px,1fr)`) of emotion buttons.
 - **Voice Visualizer**: Canvas-based with cyan border, label with `visLabelPulse`.
 - **Chat History**: 300px scrollable container with user (cyan bg) and falcon (white bg) message bubbles.
