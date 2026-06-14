@@ -1123,17 +1123,8 @@ nav{
 
 /* HUMANOID */
 
-.humanoid-section{
-    position:relative;
-    height:600px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    overflow:hidden;
-}
-
 .platform{
-    position:absolute;
+    position:relative;
     width:260px;
     height:40px;
     border-radius:50%;
@@ -1143,7 +1134,7 @@ nav{
     rgba(0,217,255,0.6),
     rgba(0,217,255,0.05)
     );
-    bottom:80px;
+    margin: -60px auto 0 auto;
     filter:blur(8px);
 }
 
@@ -1632,10 +1623,6 @@ nav{
     }
     .voice-hint{
         margin-top:8px;
-    }
-
-    .humanoid-section{
-        height:600px;
     }
 }
 

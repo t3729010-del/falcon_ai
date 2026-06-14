@@ -313,7 +313,7 @@ const AvatarProvider = {
         console.log('%c[UPLOAD_RECEIVED]', 'color:#00d9ff;font-weight:bold', `File: ${file.name} (${(file.size / 1024).toFixed(1)}KB, ${file.type})`);
 
         // ── Show loading overlay with stage display ──
-        const section = document.getElementById('humanoid-section');
+        const section = document.querySelector('.main-content');
         const loadingOverlay = document.createElement('div');
         loadingOverlay.className = 'avatar-loading-overlay';
         loadingOverlay.innerHTML = `
@@ -546,7 +546,7 @@ function initializeAvatar(){
         ringOuter: document.querySelector('.avatar-ring-outer'),
         ringInner: document.querySelector('.avatar-ring-inner'),
         staticImg: document.getElementById('static-humanoid'),
-        section: document.getElementById('humanoid-section')
+        section: document.querySelector('.main-content')
     };
 
     AvatarProvider.initializeImageElements();
