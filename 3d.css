@@ -968,9 +968,15 @@ body{
 
 .chat-section{
     margin-top:20px;
+    padding-bottom:30px;
     display:flex;
     gap:12px;
     align-items:center;
+    position:sticky;
+    bottom:0;
+    background:linear-gradient(to top, rgba(4,8,22,1) 70%, rgba(4,8,22,0));
+    padding-top:20px;
+    z-index:20;
 }
 
 .chat-input{
