@@ -761,7 +761,8 @@ body{
 
     flex:1;
     min-height:0;
-    overflow-y:auto;
+    overflow-y:visible;
+    overflow-x:visible;
 
     padding:20px 0;
 
