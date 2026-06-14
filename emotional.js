@@ -42,10 +42,30 @@ const Visualizer = {
     },
 
     start(){
+        const section = document.getElementById('visualizer-section');
+        if(section) {
+            section.classList.remove('preparing');
+        }
+        const label = document.getElementById('visualizer-label');
+        if(label) {
+            label.textContent = "Falcon is responding...";
+        }
         if(!this.ctx) return;
         this.active = true;
         this._show(true);
         this._loop();
+    },
+
+    startPreparing(){
+        const section = document.getElementById('visualizer-section');
+        if(section) {
+            section.classList.add('preparing');
+            section.classList.add('visible');
+        }
+        const label = document.getElementById('visualizer-label');
+        if(label) {
+            label.textContent = "Falcon is preparing voice...";
+        }
     },
 
     stop(){
@@ -55,6 +75,11 @@ const Visualizer = {
             this.animId = null;
         }
         this._drawFlat();
+        const section = document.getElementById('visualizer-section');
+        if(section) {
+            section.classList.remove('preparing');
+            section.classList.remove('visible');
+        }
     },
 
     _show(show){
@@ -605,7 +630,7 @@ function setAvatarState(state){
 
     if(!AVATAR.enabled) return;
 
-    const validStates = ['idle','listening','thinking','speaking','error'];
+    const validStates = ['idle','listening','thinking','speaking','preparing','loading','error'];
 
     if(!validStates.includes(state)) return;
 
@@ -616,7 +641,7 @@ function setAvatarState(state){
     if(!e.container) return;
 
     e.container.classList.remove(
-        'idle','listening','thinking','speaking','error'
+        'idle','listening','thinking','speaking','preparing','loading','error'
     );
 
     e.container.classList.add(state);
@@ -646,6 +671,17 @@ function setAvatarState(state){
         }
 
         if(state === 'idle'){
+
+            if(e.browLeft) e.browLeft.setAttribute('y1','138');
+            if(e.browLeft) e.browLeft.setAttribute('y2','140');
+            if(e.browRight) e.browRight.setAttribute('y1','140');
+            if(e.browRight) e.browRight.setAttribute('y2','138');
+
+        }
+
+        if(state === 'preparing' || state === 'loading'){
+
+            stopIdleAnimation();
 
             if(e.browLeft) e.browLeft.setAttribute('y1','138');
             if(e.browLeft) e.browLeft.setAttribute('y2','140');
@@ -1569,8 +1605,8 @@ function playNextTTSChunk(){
     }
     ttsPlaying = true;
     if(AVATAR.enabled){
-        setAvatarState('speaking');
-        Visualizer.start();
+        setAvatarState('preparing');
+        Visualizer.startPreparing();
     }
     const text = ttsQueue.shift();
     fetch("http://127.0.0.1:5000/tts", {
@@ -1586,7 +1622,11 @@ function playNextTTSChunk(){
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         audio.onplay = () => {
-            if(AVATAR.enabled) startLipSync();
+            if(AVATAR.enabled) {
+                setAvatarState('speaking');
+                Visualizer.start();
+                startLipSync();
+            }
         };
         audio.onended = () => {
             URL.revokeObjectURL(url);
