@@ -1487,7 +1487,7 @@ async function sendTextMessage(message){
         }
 
         if(AVATAR.enabled) handleAIResponse(fullReply);
-        else{
+        else if(voiceMode){
             const speech = new SpeechSynthesisUtterance(fullReply);
             speech.lang = "en-US";
             speech.rate = 1;
@@ -1517,116 +1517,144 @@ chatInput.addEventListener("keydown", (e) => {
 });
 
 // =========================
-// VOICE CHAT
+// VOICE CHAT (Vosk)
 // =========================
 
-async function startVoiceFlow(){
-    if(!currentSession){
-        const resp = await fetch("http://127.0.0.1:5000/create_session");
-        const data = await resp.json();
-        currentSession = data.session_id;
-        await loadSessions();
+let voiceMode = JSON.parse(localStorage.getItem("voiceMode")) || false;
+let isRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+
+const voiceToggleBtn = document.getElementById("voice-toggle-btn");
+
+function updateVoiceToggleUI(){
+    if(!voiceToggleBtn) return;
+    if(voiceMode){
+        voiceToggleBtn.classList.add("active");
+        voiceToggleBtn.title = "Voice mode: ON (AI speaks replies)";
+    } else {
+        voiceToggleBtn.classList.remove("active");
+        voiceToggleBtn.title = "Voice mode: OFF";
     }
-    if(AVATAR.enabled) setAvatarState('listening');
-    micBtn.classList.add('listening');
-    voiceHint.style.display = 'block';
-    voiceHint.textContent = 'Listening...';
-    voiceHint.className = 'voice-hint listening';
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.start();
-    recognition.onresult = async (event) => {
-        const transcript = event.results[0][0].transcript;
-        micBtn.classList.remove('listening');
-        micBtn.classList.add('processing');
-        voiceHint.textContent = 'Processing...';
-        voiceHint.className = 'voice-hint processing';
-        if(AVATAR.enabled) setAvatarState('thinking');
-        try{
-            const response = await fetch(
-                "http://127.0.0.1:5000/chat",
-                {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({
-                        session_id: currentSession,
-                        message: transcript,
-                        history: []
-                    })
-                }
-            );
-            const data = await response.json();
-            const sessionElement = document.querySelector(
-                `.session-item[data-id="${currentSession}"]`
-            );
-            if(sessionElement && data.title){
-                sessionElement.querySelector(".session-title").textContent = data.title;
-            }
-            const userBubble = document.createElement("div");
-            userBubble.classList.add("user-message");
-            userBubble.textContent = transcript;
-            chatHistory.appendChild(userBubble);
-            const falconBubble = document.createElement("div");
-            falconBubble.classList.add("falcon-message");
-            falconBubble.textContent = data.reply;
-            chatHistory.appendChild(falconBubble);
-            if(!conversations[currentSession]) conversations[currentSession] = [];
-            if(currentSession){
-                conversations[currentSession].push({user: transcript, falcon: data.reply});
-                localStorage.setItem("falconConversations", JSON.stringify(conversations));
-            }
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-            micBtn.classList.remove('processing');
-            micBtn.classList.add('speaking');
-            voiceHint.textContent = 'Falcon is responding...';
-            voiceHint.className = 'voice-hint speaking';
-            VisualizerLabel.textContent = 'Falcon is responding...';
-            handleAIResponse(data.reply);
-        }catch(error){
-            console.error(error);
-            micBtn.classList.remove('processing');
-            voiceHint.textContent = 'Tap to speak';
-            voiceHint.className = 'voice-hint';
-            if(AVATAR.enabled){
-                setAvatarState('error');
-                setTimeout(() => setAvatarState('idle'), 2000);
-            }
-        }
-    };
-    recognition.onend = () => {
-        setTimeout(() => {
-            if(!micBtn.classList.contains('speaking') && !micBtn.classList.contains('processing')){
-                micBtn.classList.remove('listening');
-                voiceHint.style.display = 'none';
-                voiceHint.textContent = 'Tap to speak';
-                voiceHint.className = 'voice-hint';
-                if(AVATAR.enabled) setAvatarState('idle');
-            }
-        }, 300);
-    };
-    recognition.onerror = (event) => {
-        micBtn.classList.remove('listening');
-        voiceHint.textContent = 'Tap to speak';
-        voiceHint.className = 'voice-hint';
-        console.log(event.error);
-        if(AVATAR.enabled){
-            setAvatarState('error');
-            setTimeout(() => setAvatarState('idle'), 2000);
-        }
-    };
 }
 
-// Reset voice UI when TTS finishes
-const origStop = Visualizer.stop;
-Visualizer.stop = function(){
-    origStop.call(this);
-    micBtn.classList.remove('speaking');
-    voiceHint.style.display = 'none';
-    voiceHint.textContent = 'Tap to speak';
-    voiceHint.className = 'voice-hint';
-};
+if(voiceToggleBtn){
+    voiceToggleBtn.addEventListener("click", () => {
+        voiceMode = !voiceMode;
+        localStorage.setItem("voiceMode", JSON.stringify(voiceMode));
+        updateVoiceToggleUI();
+        console.log("[VOICE] Voice mode:", voiceMode ? "ON" : "OFF");
+    });
+    updateVoiceToggleUI();
+}
+
+async function startVoiceFlow(){
+    console.log("[VOICE] startVoiceFlow called, isRecording:", isRecording);
+
+    if(isRecording){
+        console.log("[VOICE] Stopping recording...");
+        if(mediaRecorder && mediaRecorder.state === "recording"){
+            mediaRecorder.stop();
+        }
+        return;
+    }
+
+    const emotionSection = document.querySelector(".emotion-section");
+    const heroH1 = document.querySelector(".main-content h1");
+    const heroSub = document.querySelector(".subtitle");
+    const humanoidImg = document.getElementById("static-humanoid");
+    const platformEl = document.querySelector(".platform");
+    if(emotionSection) emotionSection.style.display = "none";
+    if(heroH1) heroH1.style.display = "none";
+    if(heroSub) heroSub.style.display = "none";
+    if(humanoidImg) humanoidImg.style.display = "none";
+    if(platformEl) platformEl.style.display = "none";
+
+    try{
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("[VOICE] Mic access granted");
+
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+
+        mediaRecorder.ondataavailable = (e) => {
+            if(e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+            console.log("[VOICE] Recording stopped, sending to /transcribe...");
+            isRecording = false;
+            micBtn.classList.remove("recording");
+            voiceHint.style.display = "block";
+            voiceHint.textContent = "Transcribing...";
+            voiceHint.className = "voice-hint processing";
+
+            stream.getTracks().forEach(t => t.stop());
+
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            console.log("[VOICE] Audio size:", audioBlob.size, "bytes");
+
+            if(audioBlob.size < 1000){
+                voiceHint.textContent = "Recording too short — try again";
+                voiceHint.className = "voice-hint error";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("audio", audioBlob, "recording.webm");
+
+            try{
+                const resp = await fetch("http://127.0.0.1:5000/transcribe", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await resp.json();
+                console.log("[VOICE] Transcription:", data);
+
+                if(data.error){
+                    voiceHint.textContent = "Error: " + data.error;
+                    voiceHint.className = "voice-hint error";
+                    return;
+                }
+
+                const transcript = (data.transcript || "").trim();
+                if(!transcript){
+                    voiceHint.textContent = "No speech detected — try again";
+                    voiceHint.className = "voice-hint error";
+                    return;
+                }
+
+                voiceHint.style.display = "none";
+                sendTextMessage(transcript);
+
+            } catch(err){
+                console.error("[VOICE] Transcribe error:", err);
+                voiceHint.textContent = "Transcription failed — try again";
+                voiceHint.className = "voice-hint error";
+            }
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        micBtn.classList.add("recording");
+        voiceHint.style.display = "block";
+        voiceHint.textContent = "Recording — tap to stop";
+        voiceHint.className = "voice-hint listening";
+        console.log("[VOICE] Recording started");
+
+    } catch(err){
+        console.error("[VOICE] Mic access denied:", err);
+        voiceHint.style.display = "block";
+        if(err.name === "NotAllowedError"){
+            voiceHint.textContent = "Microphone permission denied";
+        } else {
+            voiceHint.textContent = "Mic error: " + err.message;
+        }
+        voiceHint.className = "voice-hint error";
+    }
+}
+
+micBtn.addEventListener("click", startVoiceFlow);
 
 const emotionButtons =
 document.querySelectorAll(
@@ -1682,11 +1710,6 @@ emotionButtons.forEach(btn => {
     );
 
 });
-
-micBtn.addEventListener(
-    "click",
-    startVoiceFlow
-);
 
 document.addEventListener(
     "click",

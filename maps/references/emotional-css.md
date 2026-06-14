@@ -29,7 +29,8 @@ Primary stylesheet for the Emotional Avatar supporter interface (2010 lines). Pr
 - **Voice Visualizer**: Canvas-based with cyan border, label with `visLabelPulse`.
 - **Chat History**: Flex-growing container (`flex:1; min-height:0`) with `overflow-y:auto` for scrolling. User messages (cyan bg) and falcon messages (white bg) as bubbles.
 - **Chat Input**: Flex row with text input, mic button (state-driven colors), send button. Has `flex-shrink:0; padding-bottom:20px`.
-- **Voice Input**: Large 88px circular mic button with state colors (green=listening, purple=speaking, amber=processing).
+- **Voice Input**: Large 88px circular mic button with state colors (green=listening, purple=speaking, amber=processing). `.mic-btn.recording` adds red border + pulse animation.
+- **Voice Toggle**: 44px circular button (`.voice-toggle-btn`) with gray default state, cyan when `.active` (`.voice-toggle-btn.active`).
 - **Avatar Loading Overlay**: Spinner with `avatarSpin` animation, pulsing text.
 - **Avatar Generation Error**: Centered error state with retry button.
 - **Avatar Stage Track**: Horizontal dot progress indicator with active/done states.

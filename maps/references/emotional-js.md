@@ -104,14 +104,27 @@ async function sendTextMessage(message)
 - If avatar enabled: `handleAIResponse(fullReply)`; otherwise plain TTS
 - Error fallback: shows "Sorry, something went wrong" message
 
-### Voice Chat
+### Voice Chat (Vosk-powered)
 ```javascript
 async function startVoiceFlow()
 ```
-- Uses `webkitSpeechRecognition` (en-US, single result)
-- On result: POST transcript to `/chat`, render bubbles, call `handleAIResponse()`
-- Visual feedback: mic button classes (listening/processing/speaking), voice hint text
-- Visualizer label shows "Falcon is responding..."
+- Uses `MediaRecorder` API to record audio as WebM/Opus
+- Click mic button → starts recording, adds `.recording` class (red pulse)
+- Click again → stops recording, POSTs audio blob to `/transcribe`
+- Backend converts WebM → WAV via ffmpeg, transcribes with Vosk
+- Returns `{transcript}` → calls `sendTextMessage(transcript)`
+- Visual feedback: mic button classes (recording), voice hint text
+- Error handling: shows error in voice hint, auto-clears after 5s
+
+### Voice Mode Toggle
+```javascript
+let voiceMode = JSON.parse(localStorage.getItem("voiceMode")) || false;
+const voiceToggleBtn = document.getElementById("voice-toggle-btn");
+```
+- Toggles TTS on/off via `voiceMode` flag, persisted to localStorage
+- UI: `.active` class on toggle button (cyan glow vs gray)
+- When `voiceMode = true`: AI replies spoken aloud via `speechSynthesis`
+- When `voiceMode = false`: AI replies only displayed as text
 
 ### Avatar Speech & Lip Sync
 ```javascript
@@ -179,8 +192,9 @@ None.
 | Function | Trigger | Behavior |
 |----------|---------|----------|
 | `loadSessions()` | Page load, after create/delete/archive | Fetches and renders session sidebar |
-| `sendTextMessage(msg)` | Send button click, Enter key | Sends chat message, renders bubbles, TTS |
-| `startVoiceFlow()` | Mic button click | Starts speech recognition → chat → TTS |
+| `sendTextMessage(msg)` | Send button click, Enter key | Sends chat message via streaming, renders bubbles, TTS if voiceMode |
+| `startVoiceFlow()` | Mic button click | Records audio → POSTs to `/transcribe` → sends transcript via `sendTextMessage()` |
+| `toggleVoiceMode()` | Voice toggle button click | Toggles `voiceMode` flag, persists to localStorage, updates UI |
 | `speakResponse(text)` | Avatar speech | Basic TTS with lip sync |
 | `handleAIResponse(text)` | Chat response with avatar | TTS + Visualizer + lip sync |
 | `startLipSync()` | Speech start | 100ms interval animating mouth SVG |

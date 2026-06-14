@@ -10,6 +10,8 @@ Falcon AI is an AI-powered educational platform with three core modules:
 **Tech Stack:** Vanilla HTML/CSS/JS (no frameworks, no build system)
 **Backend:** Python Flask at `http://127.0.0.1:5000`
 **Static Server:** Python HTTP server at `http://127.0.0.1:5500`
+**Voice Input:** MediaRecorder + Vosk (local speech-to-text, no API key)
+**TTS:** Browser SpeechSynthesis API, gated behind voiceMode toggle
 
 ---
 
@@ -86,6 +88,8 @@ graph LR
         session["/api/sessions"]
         message["/api/messages"]
         chat["/api/chat"]
+        chatstream["/api/chat-stream"]
+        transcribe["/api/transcribe"]
         upload["/api/upload"]
         quiz["/api/quiz"]
         report_api["/api/report"]
@@ -96,6 +100,8 @@ graph LR
     emotional.js -->|CRUD sessions| session
     emotional.js -->|Send/receive messages| message
     emotional.js -->|AI chat| chat
+    emotional.js -->|Streaming chat| chatstream
+    emotional.js -->|Voice transcription| transcribe
     emotional.js -->|Upload photo| upload
     emotional.js -->|Generate avatar| avatar_api
     

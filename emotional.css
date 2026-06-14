@@ -1447,6 +1447,50 @@ nav{
     height:22px;
 }
 
+.mic-btn.recording{
+    border-color:#ef4444;
+    background:rgba(239,68,68,0.15);
+    color:#ef4444;
+    animation:recordingPulse 1s ease-in-out infinite;
+}
+
+@keyframes recordingPulse{
+    0%,100%{box-shadow:0 0 10px rgba(239,68,68,0.3);}
+    50%{box-shadow:0 0 30px rgba(239,68,68,0.6);}
+}
+
+.voice-toggle-btn{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.04);
+    color:rgba(255,255,255,0.4);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    transition:all 0.3s ease;
+}
+
+.voice-toggle-btn svg{
+    width:18px;
+    height:18px;
+}
+
+.voice-toggle-btn:hover{
+    border-color:rgba(255,255,255,0.3);
+    background:rgba(255,255,255,0.08);
+}
+
+.voice-toggle-btn.active{
+    border-color:#00d9ff;
+    background:rgba(0,217,255,0.12);
+    color:#00d9ff;
+    box-shadow:0 0 15px rgba(0,217,255,0.2);
+}
+
 .send-btn{
     padding:18px 28px;
     border:none;
@@ -1566,6 +1610,10 @@ nav{
 
 .voice-hint.processing{
     color:#f59e0b;
+}
+
+.voice-hint.error{
+    color:#ff6b6b;
 }
 
 @keyframes voicePulse{
