@@ -58,6 +58,7 @@ pip install -e ".[dev]"       # pytest, ruff, mypy
 graph LR
     subgraph Chat["Emotional Chat"]
         CHAT["POST /chat<br/>Send message, get AI reply"]
+        CHATSTREAM["POST /chat-stream<br/>SSE streaming chat"]
         CS["GET /create_session<br/>New chat session"]
         SES["GET /sessions<br/>List all sessions"]
         MSG["GET /messages/:id<br/>Session messages"]

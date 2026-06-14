@@ -69,7 +69,8 @@ Minimal setup — no blueprints, no middleware, no auth. CORS is fully open.
 
 | Route | Method | Function | Domain |
 |---|---|---|---|
-| `/chat` | POST | `chat()` | Emotional chat |
+| `/chat` | POST | `chat()` | Emotional chat (non-streaming) |
+| `/chat-stream` | POST | `chat_stream()` | Emotional chat (SSE streaming) |
 | `/create_session` | GET | `create_new_session()` | Session management |
 | `/delete_session/<id>` | DELETE | `remove_session()` | Session management |
 | `/archive_session/<id>` | POST | `archive_chat()` | Session management |
@@ -99,7 +100,9 @@ Minimal setup — no blueprints, no middleware, no auth. CORS is fully open.
 
 ---
 
-### 3A. Emotional Chat (`/chat`)
+### 3A. Emotional Chat (`/chat` and `/chat-stream`)
+
+#### Non-Streaming: `/chat`
 
 **Request (POST JSON):**
 ```json
@@ -128,7 +131,39 @@ Minimal setup — no blueprints, no middleware, no auth. CORS is fully open.
 }
 ```
 
-**Error handling:** Wraps entire handler in try/except; returns error string in `reply` field (no HTTP error status).
+#### Streaming: `/chat-stream`
+
+**Request (POST JSON):**
+```json
+{
+  "message": "I feel stressed",
+  "session_id": 42
+}
+```
+
+**Processing:**
+1. Same logic as `/chat` for history, emotion detection, and user message save.
+2. Calls `generate_reply_stream()` which streams tokens from OpenRouter.
+3. Returns SSE (Server-Sent Events) with `text/event-stream` content type.
+4. Each token sent as `data: {token}\n\n`.
+5. Ends with `data: [DONE]\n\n`.
+6. After stream completes, saves full reply to DB and updates session title.
+
+**Response:** Stream of SSE chunks:
+```
+data: I'm
+
+data:  here
+
+data:  for
+
+data:  you.
+
+data: [DONE]
+
+```
+
+**Error handling:** Wraps entire handler in try/except; returns error string in stream (no HTTP error status).
 
 ---
 
@@ -145,6 +180,12 @@ Minimal setup — no blueprints, no middleware, no auth. CORS is fully open.
 - Model: `openai/gpt-oss-120b:free`.
 - Returns `choices[0].message.content`.
 - On error, returns error message string (not an exception).
+
+**`generate_reply_stream(prompt)`** (line 187)
+- Same API call but with `"stream": True` in payload.
+- Returns a generator yielding SSE chunks: `data: {token}\n\n`.
+- Yields `data: [DONE]\n\n` at the end.
+- Uses `response.iter_lines()` to read streamed response from OpenRouter.
 
 ---
 
