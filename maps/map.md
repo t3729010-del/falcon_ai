@@ -114,6 +114,11 @@ graph LR
     subgraph Health["Health"]
         HLTH["GET /api/health<br/>Health check"]
     end
+
+    subgraph TTS["Text-to-Speech (TTS)"]
+        TTS_ROUTE["POST /tts<br/>WAV audio generation"]
+        TTS_STRM["POST /tts/stream<br/>Streaming audio chunks"]
+    end
 ```
 
 ### Database ER
@@ -338,6 +343,13 @@ flowchart TD
 |--------|------|-------------|----------|
 | GET | `/api/health` | Health check endpoint | `{status: "ok"}` |
 
+### Text-to-Speech (TTS)
+
+| Method | Path | Description | Request Body / Params | Response |
+|--------|------|-------------|----------------------|----------|
+| POST | `/tts` | Convert text to WAV audio using local Kokoro pipeline | `{text, voice, speed}` | WAV audio binary |
+| POST | `/tts/stream` | Stream text-to-speech audio chunks | `{text, voice, speed}` | Chunked audio stream |
+
 ---
 
 ## Data Structure & Persistence
@@ -371,7 +383,7 @@ flowchart TD
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `app.py` | 1560 | Main Flask app, all API routes, OpenRouter integration, PDF export |
+| `app.py` | 1890 | Main Flask app, all API routes, OpenRouter integration, PDF export, Kokoro TTS endpoints |
 | `database.py` | 727 | PostgreSQL CRUD layer, all database operations |
 | `extractor.py` | 161 | Text extraction from PDF, DOCX, PPTX, images (OCR), TXT |
 | `avatar_manager.py` | 100 | Avatar generation orchestrator, provider priority chain |

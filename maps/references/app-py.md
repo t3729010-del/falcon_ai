@@ -4,7 +4,7 @@
 
 `app.py` is the **main Flask application** for the Falcon AI backend. It serves as the HTTP API layer handling all client-server communication: emotional chat (OpenAI via OpenRouter), teaching/tutoring chat, PDF material upload and text extraction, MCQ quiz generation, learning report PDF export, avatar generation, and report persistence. It orchestrates calls to `database.py` for persistence, `avatar_manager.py` for image-to-avatar generation, and `extractor.py` for document text extraction.
 
-**File location:** `/home/luca/falcon/backend/app.py` — 1560 lines.
+**File location:** `/home/luca/falcon/backend/app.py` — 1890 lines.
 
 ---
 
@@ -429,6 +429,42 @@ Returns provider status from `avatar_manager.get_diagnostics()`.
 ```
 
 **Vosk Model:** Auto-downloaded on startup via `vosk.Model(model_name="vosk-model-small-en-us-0.15")` (~50MB, cached in `~/.cache/vosk/`). Model is a module-level global loaded at app boot.
+
+---
+
+### 3M. Text-to-Speech (TTS) (`/tts` and `/tts/stream`)
+
+#### TTS Generation (`POST /tts`)
+
+Generates synthetic speech audio from text using the local Kokoro TTS library/pipeline.
+
+**Request (POST JSON):**
+```json
+{
+  "text": "Hello, how can I help you today?",
+  "voice": "af_heart",
+  "speed": 1.0
+}
+```
+
+**Response:**
+Audio stream of type `audio/wav`.
+
+#### Streaming TTS (`POST /tts/stream`)
+
+Streams Kokoro-generated audio pieces in real-time.
+
+**Request (POST JSON):**
+```json
+{
+  "text": "Hello, how can I help you today?",
+  "voice": "af_heart",
+  "speed": 1.0
+}
+```
+
+**Response:**
+Audio stream chunk by chunk.
 
 ---
 
