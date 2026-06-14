@@ -26,6 +26,8 @@
 | Sentiment | `textblob.TextBlob` | Emotion detection on user messages |
 | File utils | `werkzeug.utils.secure_filename`, `tempfile` | Safe file names, temp PDF storage |
 | Internal | `database.*` (20+ functions), `avatar_manager.generate_avatar` | All persistence and avatar pipeline |
+| Speech recognition | `vosk.Model`, `vosk.KaldiRecognizer` | Local speech-to-text (Vosk) |
+| Audio processing | `soundfile`, `subprocess` | WAV file reading, ffmpeg WebM→WAV conversion |
 
 ### Font Registration (lines 28–61)
 
@@ -97,6 +99,7 @@ Minimal setup — no blueprints, no middleware, no auth. CORS is fully open.
 | `/delete_report/<report_id>` | DELETE | `delete_report_route()` | Reports |
 | `/generate_avatar` | POST | `generate_avatar()` | Avatar |
 | `/avatar/diagnostics` | GET | `avatar_diagnostics()` | Avatar |
+| `/transcribe` | POST | `transcribe_audio()` | Voice transcription (Vosk) |
 
 ---
 
@@ -403,6 +406,29 @@ Reports track quiz performance metrics. `created_at` is serialized via `.isoform
 #### Diagnostics (`GET /avatar/diagnostics`)
 
 Returns provider status from `avatar_manager.get_diagnostics()`.
+
+---
+
+### 3L. Voice Transcription (`/transcribe`)
+
+**Request (POST multipart):**
+- Field: `audio` — WebM/Opus audio blob from MediaRecorder
+
+**Processing:**
+1. Saves uploaded audio to a temp file.
+2. Converts WebM → WAV via ffmpeg (`ffmpeg -i input.webm -ar 16000 -ac 1 -f wav output.wav`).
+3. Loads WAV file, feeds to Vosk `KaldiRecognizer` at 16kHz sample rate.
+4. Recognizer processes audio until EOF, returns JSON result with `text` field.
+5. Cleans up temp files.
+
+**Response:**
+```json
+{
+  "transcript": "I feel stressed today"
+}
+```
+
+**Vosk Model:** Auto-downloaded on startup via `vosk.Model(model_name="vosk-model-small-en-us-0.15")` (~50MB, cached in `~/.cache/vosk/`). Model is a module-level global loaded at app boot.
 
 ---
 

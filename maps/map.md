@@ -7,6 +7,7 @@ Falcon AI is an emotional support assistant and teaching platform backend built 
 - **Framework**: Flask with CORS
 - **Database**: PostgreSQL via psycopg2
 - **AI**: OpenRouter API (GPT-OSS-120B, Mistral-7B fallback)
+- **Speech Recognition**: Vosk (local, no API key needed) + ffmpeg for audio conversion
 - **Avatar**: Multi-provider system (Identity → ComfyUI → Local → HuggingFace → Browser)
 - **Text Extraction**: PDF, DOCX, PPTX, images (OCR), TXT
 
@@ -59,6 +60,7 @@ graph LR
     subgraph Chat["Emotional Chat"]
         CHAT["POST /chat<br/>Send message, get AI reply"]
         CHATSTREAM["POST /chat-stream<br/>SSE streaming chat"]
+        TRANSCRIBE["POST /transcribe<br/>Voice transcription (Vosk)"]
         CS["GET /create_session<br/>New chat session"]
         SES["GET /sessions<br/>List all sessions"]
         MSG["GET /messages/:id<br/>Session messages"]
@@ -267,6 +269,8 @@ flowchart TD
 | Method | Path | Description | Request Body / Params | Response |
 |--------|------|-------------|----------------------|----------|
 | POST | `/chat` | Send message, get AI reply with emotion detection | `{message, session_id}` | `{reply, title, emotion}` |
+| POST | `/chat-stream` | Send message, SSE streaming reply | `{message, session_id}` | SSE stream: `data: {token}\n\n` |
+| POST | `/transcribe` | Transcribe audio via Vosk (local speech-to-text) | `multipart/form-data: audio` | `{transcript}` |
 | GET | `/create_session` | Create new chat session | — | `{session_id}` |
 | GET | `/sessions` | List all sessions for user | — | `[{id, title, emotion, is_archived}]` |
 | GET | `/messages/:session_id` | Get messages for a session | — | `[{sender, content, emotion}]` |

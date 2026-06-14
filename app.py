@@ -9,6 +9,8 @@ import requests
 import json
 import base64
 import io
+import wave
+import struct
 from flask import send_file
 from reportlab.platypus import HRFlowable
 from reportlab.platypus import (
@@ -117,6 +119,18 @@ print("HF =", HF_API_KEY)
 # Create Flask app
 app = Flask(__name__)
 CORS(app)
+
+# =========================
+# VOSK SPEECH RECOGNITION
+# =========================
+
+vosk_model = None
+try:
+    from vosk import Model, KaldiRecognizer
+    vosk_model = Model(model_name="vosk-model-small-en-us-0.15")
+    print("[VOSK] Model loaded successfully")
+except Exception as e:
+    print(f"[VOSK] Failed to load model: {e}")
 
 # Falcon personality
 FALCON_PROMPT = """
@@ -1685,6 +1699,67 @@ def avatar_diagnostics():
     """Admin diagnostics endpoint — shows provider status."""
     from avatar_manager import get_diagnostics
     return jsonify(get_diagnostics())
+
+
+# =========================
+# SPEECH-TO-TEXT ENDPOINT
+# =========================
+
+@app.route("/transcribe", methods=["POST"])
+def transcribe_audio():
+    """Transcribe audio blob (WebM/Opus) to text using Vosk."""
+    if vosk_model is None:
+        return jsonify({"error": "Speech recognition model not loaded"}), 503
+
+    if "audio" not in request.files:
+        return jsonify({"error": "No audio file provided"}), 400
+
+    audio_file = request.files["audio"]
+    print(f"[VOSK] Received audio: {audio_file.filename} ({audio_file.content_type})")
+
+    try:
+        import soundfile as sf
+        import numpy as np
+        from vosk import KaldiRecognizer
+
+        webm_data = audio_file.read()
+
+        wav_io = io.BytesIO()
+        tmp_path = "/tmp/vosk_input.webm"
+        with open(tmp_path, "wb") as f:
+            f.write(webm_data)
+
+        try:
+            import subprocess
+            pcm_path = "/tmp/vosk_input.wav"
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", tmp_path, "-ar", "16000", "-ac", "1", "-f", "wav", pcm_path],
+                capture_output=True, timeout=10
+            )
+            audio_data, samplerate = sf.read(pcm_path, dtype="int16")
+        except Exception as conv_err:
+            print(f"[VOSK] ffmpeg conversion failed: {conv_err}")
+            audio_data, samplerate = sf.read(io.BytesIO(webm_data), dtype="int16")
+            if len(audio_data.shape) > 1:
+                audio_data = audio_data[:, 0]
+
+        rec = KaldiRecognizer(vosk_model, 16000)
+        rec.SetWords(True)
+
+        chunk_size = 4000
+        for i in range(0, len(audio_data), chunk_size):
+            chunk = audio_data[i:i + chunk_size]
+            rec.AcceptWaveform(chunk.tobytes())
+
+        result = json.loads(rec.FinalResult())
+        transcript = result.get("text", "").strip()
+        print(f"[VOSK] Transcript: '{transcript}'")
+
+        return jsonify({"transcript": transcript})
+
+    except Exception as e:
+        print(f"[VOSK] Transcription error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
