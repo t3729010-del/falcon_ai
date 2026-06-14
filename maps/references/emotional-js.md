@@ -95,11 +95,14 @@ const AVATAR = {
 async function sendTextMessage(message)
 ```
 - Auto-creates session if none exists
+- **Instant user bubble:** Appends `.user-message` to `#chat-history` immediately before any fetch
+- **Streaming response:** Uses `/chat-stream` endpoint with `ReadableStream` + SSE parsing
+- Each token appended to `.falcon-message` as it arrives (typewriter effect)
+- Auto-scrolls on each token
 - Sets avatar to listening → thinking → speaking states
-- POST to `/chat` with `{session_id, message, history: []}`
-- Renders user/falcon message bubbles
 - Stores in `conversations` object, persists to LocalStorage `falconConversations`
-- If avatar enabled: `handleAIResponse(data.reply)`; otherwise plain TTS
+- If avatar enabled: `handleAIResponse(fullReply)`; otherwise plain TTS
+- Error fallback: shows "Sorry, something went wrong" message
 
 ### Voice Chat
 ```javascript
@@ -133,10 +136,14 @@ emotionButtons.forEach(btn => {
     btn.addEventListener("click", () => {
         emotionStats[emotion]++;
         localStorage.setItem("emotionStats", JSON.stringify(emotionStats));
+        sendTextMessage(text);
+        // Hide: emotion-section, h1, subtitle, #static-humanoid, .platform
     });
 });
 ```
 - Increments emotion counter on click, persists to LocalStorage
+- Sends button text to AI via `sendTextMessage()`
+- Hides emotion section, hero header, humanoid image, and platform
 
 ### Sidebar Toggle
 ```javascript
@@ -162,7 +169,8 @@ None.
 | DELETE | `/delete_session/{id}` | Delete a session |
 | POST | `/archive_session/{id}` | Archive a session |
 | POST | `/unarchive_session/{id}` | Unarchive a session |
-| POST | `/chat` | Send message, returns `{reply, title}` |
+| POST | `/chat` | Send message (non-streaming), returns `{reply, title}` |
+| POST | `/chat-stream` | Send message (SSE streaming), returns `data: {token}\n\n` chunks |
 | GET | `/messages/{id}` | Fetch messages for a session |
 | POST | `/generate_avatar` | Generate avatar from uploaded image |
 

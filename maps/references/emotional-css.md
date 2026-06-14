@@ -1,7 +1,7 @@
 # Technical Analysis of emotional.css
 
 ## 1. Overview
-Primary stylesheet for the Emotional Avatar supporter interface (2003 lines). Provides comprehensive styling for avatar components, voice interactions, chat system, session management, and the humanoid bot display.
+Primary stylesheet for the Emotional Avatar supporter interface (2010 lines). Provides comprehensive styling for avatar components, voice interactions, chat system, session management, and the humanoid bot display.
 
 ## 2. Architecture & Setup
 - **Reset**: Universal `*` reset with `box-sizing: border-box`
@@ -24,10 +24,11 @@ Primary stylesheet for the Emotional Avatar supporter interface (2003 lines). Pr
 - **Particles**: 6 absolutely-positioned cyan dots with `floatParticle` animation.
 - **Navbar**: Logo with drop-shadow, cyan title with letter-spacing.
 - **Humanoid Display**: No wrapper section — elements are direct children of `<main class="main-content">`. Platform glow (`.platform`) uses `position:relative; margin: -60px auto 0 auto` to overlay the humanoid image's bottom. Humanoid SVG has triple drop-shadow and `floatBot`/`glowPulse` animations.
-- **Emotion Grid**: Auto-fit grid (`minmax(180px,1fr)`) of 12 emoji-labeled buttons — 8 emotions + 4 quick tools (`.tool-btn`).
+- **Main Content Layout**: Flex column with `align-items:center`, `height:calc(100vh - 80px)`, `overflow-y:auto`. After hiding hero elements (on chat start), `chat-history` fills remaining space via `flex:1`.
+- **Emotion Grid**: Auto-fit grid (`minmax(180px,1fr)`) of 12 emoji-labeled buttons — 8 emotions + 4 quick tools (`.tool-btn`). Has `flex-shrink:0`.
 - **Voice Visualizer**: Canvas-based with cyan border, label with `visLabelPulse`.
-- **Chat History**: 300px scrollable container with user (cyan bg) and falcon (white bg) message bubbles.
-- **Chat Input**: Flex row with text input, mic button (state-driven colors), send button.
+- **Chat History**: Flex-growing container (`flex:1; min-height:0`) with `overflow-y:auto` for scrolling. User messages (cyan bg) and falcon messages (white bg) as bubbles.
+- **Chat Input**: Flex row with text input, mic button (state-driven colors), send button. Has `flex-shrink:0; padding-bottom:20px`.
 - **Voice Input**: Large 88px circular mic button with state colors (green=listening, purple=speaking, amber=processing).
 - **Avatar Loading Overlay**: Spinner with `avatarSpin` animation, pulsing text.
 - **Avatar Generation Error**: Centered error state with retry button.

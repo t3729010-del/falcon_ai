@@ -74,7 +74,7 @@ Emotional supporter chat interface for Falcon AI. Full-featured page with sideba
 - **File input:** `#avatar-file-input` change event loads preview
 - **Preview confirm:** `#confirm-avatar-btn` applies uploaded photo
 - **Preview cancel:** `#cancel-preview-btn` closes modal
-- **Emotion buttons:** Send emotion context to AI
+- **Emotion buttons:** Send button text to AI via `sendTextMessage()`, then hide emotion section + hero header + humanoid image + platform
 - **Mic button:** `#mic-btn` initiates voice input
 - **Send button:** `#send-btn` submits chat message
 - **Voice hint:** `#voice-hint` shown during voice flow
