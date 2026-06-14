@@ -25,6 +25,124 @@
 
     </button>
 
+    <!-- FLOATING AVATAR ACTIVATE BUTTON -->
+
+    <button
+    id="avatar-toggle-btn"
+    class="floating-avatar-btn"
+    aria-label="Activate Falcon Avatar Assistant"
+    title="Activate Avatar">
+
+        <span class="plus-icon">+</span>
+
+    </button>
+
+    <!-- AVATAR DROPDOWN MENU -->
+
+    <div
+    id="avatar-dropdown"
+    class="avatar-dropdown hidden-dropdown"
+    role="menu"
+    aria-label="Avatar options">
+
+        <button
+        class="avatar-dropdown-item"
+        data-action="upload"
+        role="menuitem">
+
+            <span class="dropdown-icon">📷</span>
+            <span class="dropdown-label">Upload Photo</span>
+
+        </button>
+
+        <button
+        class="avatar-dropdown-item"
+        data-action="default"
+        role="menuitem">
+
+            <span class="dropdown-icon">🤖</span>
+            <span class="dropdown-label">Use Default Avatar</span>
+
+        </button>
+
+        <div class="dropdown-divider"></div>
+
+        <button
+        class="avatar-dropdown-item dropdown-cancel"
+        data-action="cancel"
+        role="menuitem">
+
+            <span class="dropdown-label">Cancel</span>
+
+        </button>
+
+    </div>
+
+    <!-- HIDDEN FILE INPUT -->
+
+    <input
+    type="file"
+    id="avatar-file-input"
+    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+    hidden
+    aria-hidden="true">
+
+    <!-- AVATAR PREVIEW MODAL -->
+
+    <div
+    id="avatar-preview-modal"
+    class="modal-overlay hidden-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Avatar Photo Preview">
+
+        <div
+        class="modal-card preview-card">
+
+            <h3 class="modal-title">
+                Preview Your Avatar Photo
+            </h3>
+
+            <div
+            class="preview-image-container">
+
+                <img
+                id="avatar-preview-img"
+                src=""
+                alt="Uploaded avatar preview"
+                class="preview-image">
+
+            </div>
+
+            <p class="modal-desc preview-desc">
+                The image will be displayed inside the avatar container with smooth animations and lip-sync support.
+            </p>
+
+            <div class="modal-actions">
+
+                <button
+                id="confirm-avatar-btn"
+                class="modal-activate-btn">
+
+                    <span class="btn-dot"></span>
+                    Use This Photo
+
+                </button>
+
+                <button
+                id="cancel-preview-btn"
+                class="modal-cancel-btn">
+
+                    Choose Different Photo
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
     <!-- SPACE BACKGROUND -->
 
     <div class="space-scene">
@@ -102,50 +220,104 @@
         <section class="hologram-section">
 
 
-            <!-- AI BOT -->
+            <!-- AVATAR CONTAINER -->
 
-            <div class="ai-bot-container">
+            <div
+            id="avatar-container"
+            class="avatar-container idle"
+            role="img"
+            aria-label="Falcon AI interactive avatar">
 
-                <div class="ai-core"></div>
+                <div class="avatar-ring-outer"></div>
 
-                <div class="ai-ring ring1"></div>
+                <div class="avatar-ring-inner"></div>
 
-                <div class="ai-ring ring2"></div>
+                <div class="avatar-body-wrapper" id="avatar-body">
 
-                <div class="ai-ring ring3"></div>
+                    <svg class="avatar-svg" viewBox="0 0 240 340" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+
+                        <defs>
+
+                            <radialGradient id="ambientGlow" cx="50%" cy="40%" r="55%">
+                                <stop offset="0%" stop-color="#00d9ff" stop-opacity="0.2"/>
+                                <stop offset="100%" stop-color="#00d9ff" stop-opacity="0"/>
+                            </radialGradient>
+
+                            <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#00d9ff"/>
+                                <stop offset="100%" stop-color="#007799"/>
+                            </linearGradient>
+
+                            <filter id="glowFilter">
+                                <feGaussianBlur stdDeviation="2" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+
+                        </defs>
+
+                        <circle id="ambient-glow-el" cx="120" cy="155" r="130" fill="url(#ambientGlow)"/>
+
+                        <ellipse id="avatar-body-shape" cx="120" cy="250" rx="58" ry="32" fill="#0a1628" stroke="#00d9ff" stroke-width="1" opacity="0.5"/>
+
+                        <rect id="avatar-neck" x="106" y="218" width="28" height="28" rx="8" fill="#142240"/>
+
+                        <ellipse id="avatar-face" cx="120" cy="170" rx="54" ry="60" fill="#132848" stroke="#00d9ff" stroke-width="1.5"/>
+
+                        <path id="avatar-hair-main" d="M66 142 Q72 76 120 66 Q168 76 174 142 Q158 88 120 80 Q82 88 66 142" fill="url(#hairGrad)" opacity="0.85"/>
+
+                        <path id="avatar-hair-back" d="M68 148 Q74 86 120 74 Q166 86 172 148 Q158 96 120 88 Q82 96 68 148" fill="#00aacc" opacity="0.5"/>
+
+                        <g id="avatar-eyes-group">
+
+                            <ellipse class="eye-white" id="left-eye-white" cx="98" cy="156" rx="12" ry="13" fill="#0a1628" stroke="#00d9ff" stroke-width="1.2"/>
+
+                            <ellipse class="eye-white" id="right-eye-white" cx="142" cy="156" rx="12" ry="13" fill="#0a1628" stroke="#00d9ff" stroke-width="1.2"/>
+
+                            <circle class="eye-pupil" id="left-pupil" cx="98" cy="156" r="4.5" fill="#00d9ff" filter="url(#glowFilter)"/>
+
+                            <circle class="eye-pupil" id="right-pupil" cx="142" cy="156" r="4.5" fill="#00d9ff" filter="url(#glowFilter)"/>
+
+                        </g>
+
+                        <g id="avatar-brows">
+
+                            <line class="avatar-brow" x1="85" y1="138" x2="111" y2="140" stroke="#00d9ff" stroke-width="2.5" opacity="0.7" stroke-linecap="round"/>
+
+                            <line class="avatar-brow" x1="129" y1="140" x2="155" y2="138" stroke="#00d9ff" stroke-width="2.5" opacity="0.7" stroke-linecap="round"/>
+
+                        </g>
+
+                        <ellipse id="avatar-mouth" cx="120" cy="195" rx="16" ry="5" fill="#00d9ff" opacity="0.8"/>
+
+                    </svg>
+
+                </div>
+
+                <!-- IMAGE-BASED AVATAR (hidden until photo uploaded) -->
+
+                <div
+                id="avatar-image-wrapper"
+                class="avatar-image-wrapper hidden-avatar">
+
+                    <img
+                    id="avatar-image-el"
+                    src=""
+                    alt="Uploaded avatar photo"
+                    class="avatar-image">
+
+                    <div
+                    id="avatar-blink-overlay"
+                    class="avatar-blink-overlay"></div>
+
+                </div>
 
             </div>
 
-
-            <!-- LESSON DISPLAY -->
-
-            <div class="lesson-display">
-
-                <h2>Solar System Simulation</h2>
-
-                <p>
-
-                    Falcon AI is preparing an immersive
-                    holographic explanation of the solar system.
-
-                </p>
-
-            </div>
 
         </section>
-
-
-        <!-- CONTROLS -->
-
-        <div class="controls">
-
-            <button>Start Lesson</button>
-
-            <button>Voice Mode</button>
-
-            <button>Interactive Mode</button>
-
-        </div>
 
         <!-- CHAT HISTORY -->
 
@@ -153,9 +325,13 @@
 
         </section>
 
-        <!-- VOICE VISUALIZER -->
-
         <section class="visualizer-section" id="visualizer-section">
+
+            <div class="typing-indicator" id="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
 
             <canvas id="visualizer-canvas"></canvas>
 
@@ -191,9 +367,10 @@
         <p class="voice-hint" id="voice-hint" style="display:none">Tap to speak</p>
 
     </main>
+    <script src="browser_avatar.js"></script>
     <script src="3d.js"></script>
 
 </body>
 
 </html>
-```
+
