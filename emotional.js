@@ -1488,11 +1488,7 @@ async function sendTextMessage(message){
 
         if(AVATAR.enabled) handleAIResponse(fullReply);
         else if(voiceMode){
-            const speech = new SpeechSynthesisUtterance(fullReply);
-            speech.lang = "en-US";
-            speech.rate = 1;
-            speech.pitch = 1;
-            speechSynthesis.speak(speech);
+            speakText(fullReply);
         }
     }catch(error){
         console.error(error);
@@ -1524,6 +1520,26 @@ let voiceMode = JSON.parse(localStorage.getItem("voiceMode")) || false;
 let isRecording = false;
 let mediaRecorder = null;
 let audioChunks = [];
+
+function speakText(text){
+    if(!text) return;
+    fetch("http://127.0.0.1:5000/tts", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({text: text})
+    })
+    .then(resp => {
+        if(!resp.ok) throw new Error("TTS request failed");
+        return resp.blob();
+    })
+    .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        audio.play().catch(e => console.log("[TTS] Play error:", e));
+    })
+    .catch(e => console.log("[TTS] Error:", e));
+}
 
 const voiceToggleBtn = document.getElementById("voice-toggle-btn");
 
