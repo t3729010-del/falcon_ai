@@ -1413,6 +1413,18 @@ document.getElementById(
 
 async function sendTextMessage(message){
     if(!message) return;
+
+    const emotionSection = document.querySelector(".emotion-section");
+    const heroH1 = document.querySelector(".main-content h1");
+    const heroSub = document.querySelector(".subtitle");
+    const humanoidImg = document.getElementById("static-humanoid");
+    const platformEl = document.querySelector(".platform");
+    if(emotionSection) emotionSection.style.display = "none";
+    if(heroH1) heroH1.style.display = "none";
+    if(heroSub) heroSub.style.display = "none";
+    if(humanoidImg) humanoidImg.style.display = "none";
+    if(platformEl) platformEl.style.display = "none";
+
     if(!currentSession){
         const resp = await fetch("http://127.0.0.1:5000/create_session");
         const data = await resp.json();

@@ -9,7 +9,7 @@ body{
     background:#040816;
     color:white;
     min-height:100vh;
-    overflow-x:hidden;
+    overflow:hidden;
 }
 
 /* =========================
@@ -1103,15 +1103,33 @@ nav{
 
 .main-content{
     width:100%;
-    max-width:1400px;
     margin:auto;
     text-align:center;
-    padding:20px 30px 0;
+    padding:20px 0 0;
     display:flex;
     flex-direction:column;
     align-items:center;
     height:calc(100vh - 80px);
     overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(0,217,255,0.3) transparent;
+}
+
+.main-content::-webkit-scrollbar{
+    width:8px;
+}
+
+.main-content::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb{
+    background:rgba(0,217,255,0.3);
+    border-radius:4px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover{
+    background:rgba(0,217,255,0.5);
 }
 
 .main-content h1{
@@ -1167,8 +1185,10 @@ nav{
 /* EMOTIONS */
 
 .emotion-section{
-    margin-top:20px;
+    margin-top:60px;
     flex-shrink:0;
+    width:100%;
+    max-width:900px;
 }
 
 .emotion-section h3{
@@ -1296,16 +1316,11 @@ nav{
 .chat-history{
 
     margin-top:40px;
+    width:100%;
+    max-width:900px;
 
     flex:1;
     min-height:0;
-    overflow-y:auto;
-
-    background:rgba(255,255,255,.05);
-
-    border:1px solid rgba(255,255,255,.08);
-
-    border-radius:24px;
 
     padding:20px;
 
@@ -1356,11 +1371,13 @@ nav{
 
 .chat-section{
     margin-top:35px;
-    padding-bottom:20px;
+    padding:0 5% 20px;
     display:flex;
     gap:12px;
     align-items:center;
     flex-shrink:0;
+    width:100%;
+    max-width:900px;
 }
 
 .chat-input{
