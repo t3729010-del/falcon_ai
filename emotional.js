@@ -1446,6 +1446,9 @@ async function sendTextMessage(message){
     chatHistory.appendChild(falconBubble);
 
     let fullReply = "";
+    ttsBuffer = "";
+    ttsQueue = [];
+    ttsPlaying = false;
 
     try{
         if(AVATAR.enabled) setAvatarState('thinking');
@@ -1476,9 +1479,12 @@ async function sendTextMessage(message){
                     fullReply += token;
                     falconBubble.textContent = fullReply;
                     chatHistory.scrollTop = chatHistory.scrollHeight;
+                    if(voiceMode) processTTSToken(token);
                 }
             }
         }
+
+        if(voiceMode) flushTTSBuffer();
 
         if(!conversations[currentSession]) conversations[currentSession] = [];
         if(currentSession){
@@ -1486,10 +1492,7 @@ async function sendTextMessage(message){
             localStorage.setItem("falconConversations", JSON.stringify(conversations));
         }
 
-        if(AVATAR.enabled) handleAIResponse(fullReply);
-        else if(voiceMode){
-            speakText(fullReply);
-        }
+        if(AVATAR.enabled && !voiceMode) handleAIResponse(fullReply);
     }catch(error){
         console.error(error);
         falconBubble.textContent = "Sorry, something went wrong. Please try again.";
@@ -1521,24 +1524,82 @@ let isRecording = false;
 let mediaRecorder = null;
 let audioChunks = [];
 
-function speakText(text){
-    if(!text) return;
+// =========================
+// STREAMING TTS QUEUE
+// =========================
+
+let ttsQueue = [];
+let ttsPlaying = false;
+let ttsBuffer = "";
+const TTS_MIN_CHUNK = 60;
+const TTS_MAX_CHUNK = 200;
+const TTS_SENTENCE_RE = /[^.!?,;:]+[.!?,;:]+/g;
+
+function flushTTSBuffer(){
+    const remaining = ttsBuffer.trim();
+    ttsBuffer = "";
+    if(remaining) enqueueTTSChunk(remaining);
+}
+
+function enqueueTTSChunk(text){
+    const clean = text.trim();
+    if(!clean) return;
+    ttsQueue.push(clean);
+    if(!ttsPlaying) playNextTTSChunk();
+}
+
+function playNextTTSChunk(){
+    if(ttsQueue.length === 0){
+        ttsPlaying = false;
+        if(AVATAR.enabled) setAvatarState('idle');
+        return;
+    }
+    ttsPlaying = true;
+    if(AVATAR.enabled) setAvatarState('speaking');
+    const text = ttsQueue.shift();
     fetch("http://127.0.0.1:5000/tts", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({text: text})
     })
     .then(resp => {
-        if(!resp.ok) throw new Error("TTS request failed");
+        if(!resp.ok) throw new Error("TTS failed");
         return resp.blob();
     })
     .then(blob => {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
-        audio.onended = () => URL.revokeObjectURL(url);
-        audio.play().catch(e => console.log("[TTS] Play error:", e));
+        audio.onended = () => {
+            URL.revokeObjectURL(url);
+            playNextTTSChunk();
+        };
+        audio.onerror = () => {
+            URL.revokeObjectURL(url);
+            playNextTTSChunk();
+        };
+        audio.play().catch(() => playNextTTSChunk());
     })
-    .catch(e => console.log("[TTS] Error:", e));
+    .catch(() => playNextTTSChunk());
+}
+
+function processTTSToken(token){
+    if(!voiceMode) return;
+    ttsBuffer += token;
+    let match;
+    while((match = TTS_SENTENCE_RE.exec(ttsBuffer)) !== null){
+        const endIdx = match.index + match[0].length;
+        if(endIdx >= TTS_MIN_CHUNK){
+            const chunk = ttsBuffer.slice(0, endIdx);
+            ttsBuffer = ttsBuffer.slice(endIdx);
+            enqueueTTSChunk(chunk);
+            TTS_SENTENCE_RE.lastIndex = 0;
+            break;
+        }
+    }
+    if(ttsBuffer.length >= TTS_MAX_CHUNK){
+        enqueueTTSChunk(ttsBuffer);
+        ttsBuffer = "";
+    }
 }
 
 const voiceToggleBtn = document.getElementById("voice-toggle-btn");
