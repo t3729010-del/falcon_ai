@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, request, jsonify, Response, stream_with_context
@@ -1759,6 +1760,34 @@ def transcribe_audio():
 
     except Exception as e:
         print(f"[VOSK] Transcription error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# =========================
+# TEXT-TO-SPEECH (espeak-ng)
+# =========================
+
+@app.route("/tts", methods=["POST"])
+def tts():
+    """Generate speech audio from text using espeak-ng."""
+    try:
+        data = request.get_json(force=True)
+        text = data.get("text", "").strip()
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+
+        output_path = "/tmp/falcon_tts.wav"
+        result = subprocess.run(
+            ["espeak-ng", "-v", "en", "-s", "160", "-p", "50", "-w", output_path, text],
+            capture_output=True, timeout=30
+        )
+        if result.returncode != 0:
+            return jsonify({"error": f"espeak-ng failed: {result.stderr.decode()}"}), 500
+
+        return send_file(output_path, mimetype="audio/wav", as_attachment=False)
+
+    except Exception as e:
+        print(f"[TTS] Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
