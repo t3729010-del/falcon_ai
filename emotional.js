@@ -23,6 +23,12 @@ const Visualizer = {
     active: false,
     bars: 48,
 
+    // Web Audio API
+    audioCtx: null,
+    analyser: null,
+    source: null,
+    dataArray: null,
+
     init(){
         this.canvas = document.getElementById('visualizer-canvas');
         if(!this.canvas) return;
@@ -41,31 +47,64 @@ const Visualizer = {
         this.ctx && this.ctx.scale(2, 2);
     },
 
-    start(){
+    _ensureAudioCtx(){
+        if(!this.audioCtx || this.audioCtx.state === 'closed'){
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if(this.audioCtx.state === 'suspended'){
+            this.audioCtx.resume();
+        }
+    },
+
+    /* Call with the Audio element so we can tap real frequency data */
+    start(audioEl){
         const section = document.getElementById('visualizer-section');
-        if(section) {
-            section.classList.remove('preparing');
-        }
+        if(section) section.classList.remove('preparing');
         const label = document.getElementById('visualizer-label');
-        if(label) {
-            label.textContent = "Falcon is responding...";
-        }
+        if(label) label.textContent = 'Falcon is responding...';
         if(!this.ctx) return;
+
+        // Disconnect previous source if any
+        this._disconnectSource();
+
+        if(audioEl){
+            try{
+                this._ensureAudioCtx();
+                if(!this.analyser){
+                    this.analyser = this.audioCtx.createAnalyser();
+                    this.analyser.fftSize = 128;          // 64 frequency bins
+                    this.analyser.smoothingTimeConstant = 0.8;
+                    this.analyser.connect(this.audioCtx.destination);
+                    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+                }
+                this.source = this.audioCtx.createMediaElementSource(audioEl);
+                this.source.connect(this.analyser);
+            }catch(e){
+                // If createMediaElementSource fails (already captured), ignore
+                this.source = null;
+            }
+        }
+
         this.active = true;
         this._show(true);
         this._loop();
     },
 
+    _disconnectSource(){
+        if(this.source){
+            try{ this.source.disconnect(); }catch(e){}
+            this.source = null;
+        }
+    },
+
     startPreparing(){
         const section = document.getElementById('visualizer-section');
-        if(section) {
+        if(section){
             section.classList.add('preparing');
             section.classList.add('visible');
         }
         const label = document.getElementById('visualizer-label');
-        if(label) {
-            label.textContent = "Falcon is preparing voice...";
-        }
+        if(label) label.textContent = 'Falcon is preparing voice...';
     },
 
     stop(){
@@ -74,9 +113,10 @@ const Visualizer = {
             cancelAnimationFrame(this.animId);
             this.animId = null;
         }
+        this._disconnectSource();
         this._drawFlat();
         const section = document.getElementById('visualizer-section');
-        if(section) {
+        if(section){
             section.classList.remove('preparing');
             section.classList.remove('visible');
         }
@@ -99,7 +139,6 @@ const Visualizer = {
         const ctx = this.ctx;
         const w = ctx.canvas.width / 2;
         const h = ctx.canvas.height / 2;
-        const now = performance.now() / 1000;
 
         ctx.clearRect(0, 0, w, h);
 
@@ -107,21 +146,38 @@ const Visualizer = {
         const gap = 1.5;
         const barH = h - 24;
 
+        // Get real frequency data if analyser is connected
+        let freqData = null;
+        if(this.analyser && this.dataArray){
+            this.analyser.getByteFrequencyData(this.dataArray);
+            freqData = this.dataArray;
+        }
+
         for(let i = 0; i < this.bars; i++){
-            const phase = i / this.bars * Math.PI * 4 + now * 6;
-            const envelope = 1 - Math.abs(i / this.bars - 0.5) * 0.6;
-            const height = (0.08 + Math.abs(Math.sin(phase)) * 0.7 + Math.sin(phase * 0.7 + 1) * 0.22) * barH * envelope;
+            let height;
+            if(freqData){
+                // Map bar index to frequency bin (use lower half for more vocal range)
+                const binIndex = Math.floor(i / this.bars * (freqData.length * 0.75));
+                const raw = freqData[binIndex] / 255;   // 0..1
+                // Shape envelope: taper the edges slightly
+                const envelope = 1 - Math.abs(i / this.bars - 0.5) * 0.4;
+                height = Math.max(2, raw * barH * envelope);
+            } else {
+                // Fallback: gentle idle pulse
+                const now = performance.now() / 1000;
+                const phase = i / this.bars * Math.PI * 4 + now * 3;
+                height = (0.06 + Math.abs(Math.sin(phase)) * 0.15) * barH;
+            }
 
             const x = 10 + i * barW + gap / 2;
             const y = h - 12 - height;
 
-            const hue = 185 + Math.sin(now * 0.5 + i * 0.3) * 5;
-            ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${0.35 + height / barH * 0.45})`;
-            ctx.shadowColor = `rgba(0, 217, 255, ${0.15 + height / barH * 0.25})`;
-            ctx.shadowBlur = 8;
+            const intensity = height / barH;
+            ctx.fillStyle = `hsla(188, 100%, ${52 + intensity * 14}%, ${0.4 + intensity * 0.5})`;
+            ctx.shadowColor = `rgba(0, 217, 255, ${0.1 + intensity * 0.3})`;
+            ctx.shadowBlur = 6 + intensity * 10;
             ctx.beginPath();
-            const r = 2;
-            ctx.roundRect(x, y, barW - gap, Math.max(2, height), r);
+            ctx.roundRect(x, y, barW - gap, Math.max(2, height), 2);
             ctx.fill();
         }
 
@@ -1624,7 +1680,7 @@ function playNextTTSChunk(){
         audio.onplay = () => {
             if(AVATAR.enabled) {
                 setAvatarState('speaking');
-                Visualizer.start();
+                Visualizer.start(audio);   // pass real audio element
                 startLipSync();
             }
         };

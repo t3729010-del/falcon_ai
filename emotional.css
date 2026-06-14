@@ -1287,7 +1287,7 @@ nav{
 .visualizer-section.visible.preparing{
     position:fixed;
     /* sit just under the avatar container (avatar top = 50vh-200px, height≈340px) */
-    top:calc(50vh + 160px);
+    top:calc(50vh + 185px);
     left:50%;
     transform:translateX(-50%);
     width:auto;
@@ -1326,7 +1326,7 @@ nav{
     position:static;
     width:100%;
     max-width:480px;
-    margin-top:18px;
+    margin-top:48px;
     padding:16px 20px;
     background:rgba(10, 22, 40, 0.45);
     backdrop-filter:blur(12px);

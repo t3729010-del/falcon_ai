@@ -53,7 +53,7 @@ Emotional supporter chat interface for Falcon AI. Full-featured page with sideba
   - Platform: `.platform` — glowing ellipse positioned below the humanoid image
 - **Emotion Grid:** 12 buttons — 8 emotions (😊 Happy, 😌 Calm, 💪 Motivated, 🤔 Thoughtful, 😕 Confused, 😔 Sad, 😫 Overwhelmed, 😤 Frustrated) + 4 tools (📚 Study Motivation, 🎯 Focus Booster, 💪 Confidence Builder, 🧘 Burnout Recovery)
 - **Chat History:** `#chat-history`
-- **Voice Visualizer:** `#visualizer-section` with `<canvas id="visualizer-canvas">` and label
+- **Voice Visualizer:** `#visualizer-section` with `<canvas id="visualizer-canvas">`, `#typing-indicator` (3 bouncing spans), and `#visualizer-label` label
 - **Chat Input:** `#chat-input` text field + `#mic-btn` (SVG microphone) + `#send-btn`
 - **Voice Hint:** `#voice-hint` — "Tap to speak"
 

@@ -203,7 +203,7 @@ graph TD
 ### JavaScript Files (12)
 | File | Reference | Purpose |
 |------|-----------|---------|
-| `emotional.js` | [emotional-js.md](./references/emotional-js.md) | Avatar system, lip-sync, TTS, voice input, audio visualizer, sessions, chat |
+| `emotional.js` | [emotional-js.md](./references/emotional-js.md) | Avatar system, lip-sync, TTS audio streaming queue, voice input, Web Audio API visualizer, sessions, chat |
 | `text.js` | [text-js.md](./references/text-js.md) | Text teaching: chat, sessions, copy/examples/quiz/regen, voice, PDF export |
 | `3d.js` | [3d-js.md](./references/3d-js.md) | 3D teaching: sessions, visualizer, text/voice chat, speech synthesis |
 | `quiz-materials.js` | [quiz-materials-js.md](./references/quiz-materials-js.md) | Material upload (drag & drop), material selection/deletion |
@@ -219,7 +219,7 @@ graph TD
 ### CSS Files (14)
 | File | Reference | Purpose |
 |------|-----------|---------|
-| `emotional.css` | [emotional-css.md](./references/emotional-css.md) | Avatar animations, particles, chat bubbles, dropdown, modal |
+| `emotional.css` | [emotional-css.md](./references/emotional-css.md) | Avatar animations, preparing/loading states, redesigned visualizer pill, particles, chat bubbles, dropdown, modal |
 | `3d.css` | [3d-css.md](./references/3d-css.md) | Space scene, hologram, AI bot rings, stars, nebula |
 | `text.css` | [text-css.md](./references/text-css.md) | Teaching sidebar, chat area, markdown rendering |
 | `quiz-materials.css` | [quiz-materials-css.md](./references/quiz-materials-css.md) | Upload UI, material cards, processing bar |
