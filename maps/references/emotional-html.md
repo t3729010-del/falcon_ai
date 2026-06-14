@@ -51,10 +51,9 @@ Emotional supporter chat interface for Falcon AI. Full-featured page with sideba
   - SVG filter: `glowFilter`
   - Image wrapper: `#avatar-image-wrapper` for uploaded photos
   - Platform: `.platform` — glowing ellipse positioned below the humanoid image
-- **Emotion Grid:** 8 buttons — Happy, Calm, Motivated, Thoughtful, Confused, Sad, Overwhelmed, Frustrated
+- **Emotion Grid:** 12 buttons — 8 emotions (😊 Happy, 😌 Calm, 💪 Motivated, 🤔 Thoughtful, 😕 Confused, 😔 Sad, 😫 Overwhelmed, 😤 Frustrated) + 4 tools (📚 Study Motivation, 🎯 Focus Booster, 💪 Confidence Builder, 🧘 Burnout Recovery)
 - **Chat History:** `#chat-history`
 - **Voice Visualizer:** `#visualizer-section` with `<canvas id="visualizer-canvas">` and label
-- **Quick Tools:** Study Motivation, Focus Booster, Confidence Builder, Burnout Recovery
 - **Chat Input:** `#chat-input` text field + `#mic-btn` (SVG microphone) + `#send-btn`
 - **Voice Hint:** `#voice-hint` — "Tap to speak"
 
@@ -84,6 +83,5 @@ Emotional supporter chat interface for Falcon AI. Full-featured page with sideba
 - **SVG Avatar:** Full humanoid with ambient glow, face, eyes with pupils, brows, hair, mouth — all with `#00d9ff` cyan accents
 - **Avatar rings:** `.avatar-ring-outer` and `.avatar-ring-inner` for animation
 - **Particles:** 6 floating spans for ambient effect
-- **Emotion grid:** 2x4 grid of emoji-labeled buttons
+- **Emotion grid:** Auto-fit grid of 12 emoji-labeled buttons (8 emotions + 4 quick tools)
 - **Voice visualizer:** Canvas-based audio visualization
-- **Quick tools:** 4 horizontal tool buttons

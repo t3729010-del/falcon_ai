@@ -24,7 +24,7 @@ Primary stylesheet for the Emotional Avatar supporter interface (2003 lines). Pr
 - **Particles**: 6 absolutely-positioned cyan dots with `floatParticle` animation.
 - **Navbar**: Logo with drop-shadow, cyan title with letter-spacing.
 - **Humanoid Display**: No wrapper section — elements are direct children of `<main class="main-content">`. Platform glow (`.platform`) uses `position:relative; margin: -60px auto 0 auto` to overlay the humanoid image's bottom. Humanoid SVG has triple drop-shadow and `floatBot`/`glowPulse` animations.
-- **Emotion Grid**: Auto-fit grid (`minmax(180px,1fr)`) of emotion buttons.
+- **Emotion Grid**: Auto-fit grid (`minmax(180px,1fr)`) of 12 emoji-labeled buttons — 8 emotions + 4 quick tools (`.tool-btn`).
 - **Voice Visualizer**: Canvas-based with cyan border, label with `visLabelPulse`.
 - **Chat History**: 300px scrollable container with user (cyan bg) and falcon (white bg) message bubbles.
 - **Chat Input**: Flex row with text input, mic button (state-driven colors), send button.
