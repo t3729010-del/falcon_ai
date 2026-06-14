@@ -1,6 +1,10 @@
 import os
 import sys
 import subprocess
+import torch
+import numpy as np
+import soundfile as sf
+from kokoro import KPipeline
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, request, jsonify, Response, stream_with_context
@@ -102,7 +106,7 @@ from werkzeug.utils import secure_filename
 import os
 from database import save_memory, find_memory
 
-# Load .env file
+# Load .env file from Falcon_AI root folder
 from pathlib import Path
 
 # Load .env file from Falcon_AI root folder
@@ -115,6 +119,14 @@ HF_API_KEY = os.getenv("HF_API_KEY")
 
 print("OPENROUTER =", OPENROUTER_API_KEY)
 print("HF =", HF_API_KEY)
+
+# Kokoro TTS pipeline initialization
+torch.set_num_threads(8)
+torch.set_num_interop_threads(4)
+
+print("[kokoro] Loading pipeline on CPU...")
+pipeline = KPipeline(lang_code='a')
+print("[kokoro] Pipeline ready.")
 
 
 # Create Flask app
@@ -1764,31 +1776,114 @@ def transcribe_audio():
 
 
 # =========================
-# TEXT-TO-SPEECH (espeak-ng)
+# TEXT-TO-SPEECH (Kokoro)
 # =========================
 
 @app.route("/tts", methods=["POST"])
 def tts():
-    """Generate speech audio from text using espeak-ng."""
+    """Generate speech audio from text using Kokoro."""
     try:
         data = request.get_json(force=True)
         text = data.get("text", "").strip()
         if not text:
             return jsonify({"error": "No text provided"}), 400
 
-        output_path = "/tmp/falcon_tts.wav"
-        result = subprocess.run(
-            ["espeak-ng", "-v", "en", "-s", "130", "-p", "50", "-w", output_path, text],
-            capture_output=True, timeout=30
-        )
-        if result.returncode != 0:
-            return jsonify({"error": f"espeak-ng failed: {result.stderr.decode()}"}), 500
+        voice = data.get("voice", "af_heart")
+        speed = float(data.get("speed", 1.0))
 
-        return send_file(output_path, mimetype="audio/wav", as_attachment=False)
+        chunks = []
+        with torch.no_grad():
+            generator = pipeline(text, voice=voice, speed=speed)
+            for _, _, audio in generator:
+                chunks.append(audio)
+
+        if not chunks:
+            raise ValueError("Kokoro returned no audio — check your text input.")
+
+        audio_np = np.concatenate(chunks, axis=0)
+
+        buf = io.BytesIO()
+        sf.write(buf, audio_np, samplerate=24000, format="WAV", subtype="PCM_16")
+        buf.seek(0)
+
+        return Response(
+            buf.read(),
+            mimetype="audio/wav",
+            headers={
+                "Content-Disposition": "inline; filename=speech.wav",
+                "Cache-Control": "no-cache",
+            },
+        )
 
     except Exception as e:
         print(f"[TTS] Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# STREAMING TEXT-TO-SPEECH (Kokoro)
+# ============================================================================
+
+@app.route("/tts/stream", methods=["POST"])
+def tts_stream():
+    """Generate streaming speech audio from text using Kokoro."""
+    try:
+        data = request.get_json(force=True)
+        text = data.get("text", "").strip()
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+
+        voice = data.get("voice", "af_heart")
+        speed = float(data.get("speed", 1.0))
+
+        def generate():
+            with torch.no_grad():
+                generator = pipeline(text, voice=voice, speed=speed)
+                for _, _, audio in generator:
+                    pcm = (audio * 32767).astype(np.int16)
+                    yield pcm.tobytes()
+
+        return Response(
+            generate(),
+            mimetype="audio/pcm",
+            headers={
+                "X-Sample-Rate": "24000",
+                "X-Channels": "1",
+                "X-Bit-Depth": "16",
+                "Cache-Control": "no-cache",
+                "Transfer-Encoding": "chunked",
+            },
+        )
+
+    except Exception as e:
+        print(f"[TTS] Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# LIST AVAILABLE VOICES
+# ============================================================================
+
+@app.route("/voices", methods=["GET"])
+def list_voices():
+    """List available Kokoro voices."""
+    VOICES = {
+        "american_female": ["af_heart", "af_bella", "af_sarah", "af_nicole", "af_sky"],
+        "american_male":   ["am_adam", "am_echo", "am_eric", "am_fenrir", "am_liam"],
+        "british_female":  ["bf_emma", "bf_isabella", "bf_alice", "bf_lily"],
+        "british_male":    ["bm_george", "bm_daniel", "bm_fable", "bm_lewis"],
+    }
+    return jsonify(VOICES)
+
+
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check endpoint."""
+    return jsonify({"status": "ok", "model": "kokoro-82M", "device": "cpu"})
 
 
 if __name__ == "__main__":
