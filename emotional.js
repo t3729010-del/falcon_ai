@@ -1607,8 +1607,12 @@ emotionButtons.forEach(btn => {
         "click",
         () => {
 
-            const emotion =
+            const text =
             btn.textContent
+            .trim();
+
+            const emotion =
+            text
             .toLowerCase()
             .replace(/[^\w]/g,"")
             .trim();
@@ -1620,7 +1624,27 @@ emotionButtons.forEach(btn => {
                 JSON.stringify(emotionStats)
             );
 
-            console.log(emotionStats);
+            sendTextMessage(text);
+
+            document.querySelector(
+                ".emotion-section"
+            ).style.display = "none";
+
+            document.querySelector(
+                ".main-content h1"
+            ).style.display = "none";
+
+            document.querySelector(
+                ".subtitle"
+            ).style.display = "none";
+
+            document.getElementById(
+                "static-humanoid"
+            ).style.display = "none";
+
+            document.querySelector(
+                ".platform"
+            ).style.display = "none";
 
         }
     );
