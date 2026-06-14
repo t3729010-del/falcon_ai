@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from dotenv import load_dotenv
 import requests
@@ -183,6 +183,137 @@ def generate_reply(prompt):
         return f"OpenRouter Error: {result['error']['message']}"
 
     return result["choices"][0]["message"]["content"]
+
+def generate_reply_stream(prompt):
+
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "openai/gpt-oss-120b:free",
+        "messages": [
+            {
+                "role": "system",
+                "content": FALCON_PROMPT
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        "stream": True
+    }
+
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers=headers,
+        json=data,
+        stream=True,
+        timeout=120
+    )
+
+    full_reply = ""
+
+    for line in response.iter_lines():
+        if not line:
+            continue
+        line = line.decode("utf-8")
+        if not line.startswith("data: "):
+            continue
+        payload = line[6:]
+        if payload.strip() == "[DONE]":
+            break
+        try:
+            chunk = json.loads(payload)
+            delta = chunk["choices"][0].get("delta", {})
+            token = delta.get("content", "")
+            if token:
+                full_reply += token
+                yield f"data: {token}\n\n"
+        except (json.JSONDecodeError, KeyError, IndexError):
+            continue
+
+    yield "data: [DONE]\n\n"
+
+@app.route("/chat-stream", methods=["POST"])
+def chat_stream():
+    try:
+        data = request.json
+        user_message = data.get("message", "")
+        message_lower = user_message.lower()
+        session_id = data.get("session_id")
+        history = get_chat_history(session_id)
+
+        if "my name is" in message_lower:
+            name = user_message[10:].strip()
+            save_memory(1, "name", name)
+
+        if "what is my name" in message_lower:
+            memory = find_memory(1, "name")
+            if memory:
+                def emit_name():
+                    yield f"data: Your name is {memory[0]}.\n\n"
+                    yield "data: [DONE]\n\n"
+                return Response(
+                    stream_with_context(emit_name()),
+                    content_type="text/event-stream"
+                )
+
+        conversation_text = ""
+        for sender, content in history:
+            if sender == "user":
+                conversation_text += f"\nUser: {content}"
+            else:
+                conversation_text += f"\nFalcon: {content}"
+
+        prompt = f"""
+        {FALCON_PROMPT}
+
+        Previous Conversation:
+        {conversation_text}
+
+        User: {user_message}
+        Falcon:
+        """
+
+        emotion = detect_emotion(user_message)
+
+        save_message(session_id, "user", user_message, emotion)
+
+        def generate():
+            full_reply = ""
+            for token in generate_reply_stream(f"""
+            Emotion: {emotion}
+
+            {prompt}
+            """):
+                if token.startswith("data: ") and token[6:].strip() != "[DONE]":
+                    full_reply += token[6:]
+                yield token
+
+            save_message(session_id, "falcon", full_reply, emotion)
+            title = user_message[:40]
+            update_session_title(session_id, title)
+
+        return Response(
+            stream_with_context(generate()),
+            content_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no"
+            }
+        )
+
+    except Exception as e:
+        def emit_error():
+            yield f"data: Error: {str(e)}\n\n"
+            yield "data: [DONE]\n\n"
+        return Response(
+            stream_with_context(emit_error()),
+            content_type="text/event-stream"
+        )
 
 @app.route("/chat", methods=["POST"])
 def chat():
