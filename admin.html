@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falcon AI — Avatar Diagnostics</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>⚙ Avatar Provider Diagnostics</h1>
+            <a href="emotional.html" class="back-link">← Back to Chat</a>
+        </header>
+
+        <section class="status-summary" id="status-summary">
+            <div class="status-card active-provider">
+                <span class="label">Active Provider</span>
+                <span class="value" id="active-provider">—</span>
+            </div>
+            <div class="status-card available-count">
+                <span class="label">Available</span>
+                <span class="value" id="available-count">—</span>
+            </div>
+        </section>
+
+        <section class="provider-grid" id="provider-grid">
+            <!-- Populated by JS -->
+        </section>
+
+        <section class="actions">
+            <button id="refresh-btn" class="action-btn">⟳ Refresh</button>
+            <button id="test-avatar-btn" class="action-btn">Test Avatar Generation</button>
+        </section>
+
+        <section class="requirements" id="requirements">
+            <h2>Provider Requirements</h2>
+            <div class="req-grid">
+                <div class="req-card identity-card">
+                    <h3>🧬 IdentityProvider (IP-Adapter-FaceID)</h3>
+                    <ul>
+                        <li><strong>RAM:</strong> ~4GB free (SD1.5) or ~8GB (SDXL)</li>
+                        <li><strong>Disk:</strong> ~5GB for SD1.5 + FaceID weights</li>
+                        <li><strong>GPU:</strong> Recommended (CPU fallback ~5-10 min)</li>
+                        <li><strong>Install:</strong> <code>pip install diffusers torch transformers accelerate safetensors insightface opencv-python-headless onnxruntime</code></li>
+                        <li><strong>Preserves:</strong> Face structure, eyes, nose, face shape, hairstyle</li>
+                    </ul>
+                </div>
+                <div class="req-card">
+                    <h3>🖥 LocalProvider (SD2.1)</h3>
+                    <ul>
+                        <li><strong>RAM:</strong> ~3GB free</li>
+                        <li><strong>Disk:</strong> ~5GB for model</li>
+                        <li><strong>GPU:</strong> Optional (CPU fallback ~3-5 min)</li>
+                        <li><strong>Install:</strong> <code>pip install diffusers torch transformers accelerate safetensors pillow</code></li>
+                    </ul>
+                </div>
+                <div class="req-card">
+                    <h3>🎨 ComfyUIProvider</h3>
+                    <ul>
+                        <li><strong>ComfyUI:</strong> Running on localhost:8188</li>
+                        <li><strong>Python:</strong> <code>pip install websocket-client</code></li>
+                        <li><strong>Model:</strong> Any SD model installed</li>
+                        <li><strong>VRAM:</strong> Depends on model (2-8GB)</li>
+                    </ul>
+                </div>
+                <div class="req-card">
+                    <h3>☁ HuggingFaceProvider</h3>
+                    <ul>
+                        <li><strong>Free tier:</strong> api-inference.huggingface.co</li>
+                        <li><strong>Rate limit:</strong> ~30 req/min</li>
+                        <li><strong>Needs:</strong> HF_API_KEY in .env</li>
+                        <li><strong>Models:</strong> SD2.1, SD1.5 (free)</li>
+                    </ul>
+                </div>
+                <div class="req-card">
+                    <h3>🌐 BrowserFallbackProvider</h3>
+                    <ul>
+                        <li><strong>Zero server cost</strong></li>
+                        <li><strong>Runs entirely in browser</strong></li>
+                        <li><strong>Canvas-based cartoonization</strong></li>
+                        <li><strong>No internet required</strong></li>
+                        <li><strong>Always available</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+    <title>Falcon AI Emotional Supporter</title>
+
+    <link rel="stylesheet"
+    href="emotional.css">
+
+</head>
+
+<body>
+
+    <!-- BACKGROUND -->
+
+    <div class="background"></div>
+    <aside class="sidebar hide-sidebar" id="sidebar">
+
+        <div class="sidebar-overlay"></div>
+        <button class="new-chat-btn" id="new-chat-btn">
+
+            + New Session
+
+        </button>
+
+        <div class="search-container">
+            <input
+                type="text"
+                id="search-conversations"
+                placeholder="Search conversations..."
+            >
+        </div>
+
+        <h3>Recents</h3>
+
+        <div class="session-list">
+
+        </div>
+
+        <h3 class="archive-title" id="archive-toggle">
+
+            ▶ Archived
+
+        </h3>
+
+        <div class="archive-list hidden-archive">
+
+        </div>
+
+    </aside>
+
+    <div class="particles">
+
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+
+    </div>
+
+    <!-- FLOATING AVATAR ACTIVATE BUTTON -->
+
+    <button
+    id="avatar-toggle-btn"
+    class="floating-avatar-btn"
+    aria-label="Activate Falcon Avatar Assistant"
+    title="Activate Avatar">
+
+        <span class="plus-icon">+</span>
+
+    </button>
+
+    <!-- AVATAR DROPDOWN MENU -->
+
+    <div
+    id="avatar-dropdown"
+    class="avatar-dropdown hidden-dropdown"
+    role="menu"
+    aria-label="Avatar options">
+
+        <button
+        class="avatar-dropdown-item"
+        data-action="upload"
+        role="menuitem">
+
+            <span class="dropdown-icon">📷</span>
+            <span class="dropdown-label">Upload Photo</span>
+
+        </button>
+
+        <button
+        class="avatar-dropdown-item"
+        data-action="default"
+        role="menuitem">
+
+            <span class="dropdown-icon">🤖</span>
+            <span class="dropdown-label">Use Default Avatar</span>
+
+        </button>
+
+        <div class="dropdown-divider"></div>
+
+        <button
+        class="avatar-dropdown-item"
+        data-action="deactivate"
+        id="dropdown-deactivate"
+        role="menuitem">
+
+            <span class="dropdown-icon">🔌</span>
+            <span class="dropdown-label">Deactivate Avatar</span>
+
+        </button>
+
+        <div class="dropdown-divider"></div>
+
+        <button
+        class="avatar-dropdown-item dropdown-cancel"
+        data-action="cancel"
+        role="menuitem">
+
+            <span class="dropdown-label">Cancel</span>
+
+        </button>
+
+    </div>
+
+    <!-- HIDDEN FILE INPUT -->
+
+    <input
+    type="file"
+    id="avatar-file-input"
+    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+    hidden
+    aria-hidden="true">
+
+    <!-- AVATAR PREVIEW MODAL -->
+
+    <div
+    id="avatar-preview-modal"
+    class="modal-overlay hidden-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Avatar Photo Preview">
+
+        <div
+        class="modal-card preview-card">
+
+            <h3 class="modal-title">
+                Preview Your Avatar Photo
+            </h3>
+
+            <div
+            class="preview-image-container">
+
+                <img
+                id="avatar-preview-img"
+                src=""
+                alt="Uploaded avatar preview"
+                class="preview-image">
+
+            </div>
+
+            <p class="modal-desc preview-desc">
+                The image will be displayed inside the avatar container with smooth animations and lip-sync support.
+            </p>
+
+            <div class="modal-actions">
+
+                <button
+                id="confirm-avatar-btn"
+                class="modal-activate-btn">
+
+                    <span class="btn-dot"></span>
+                    Use This Photo
+
+                </button>
+
+                <button
+                id="cancel-preview-btn"
+                class="modal-cancel-btn">
+
+                    Choose Different Photo
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- HEADER -->
+
+    <nav>
+        <button class="menu-btn" id="menu-btn">
+            ☰
+        </button>
+
+        <div class="logo-section">
+
+            <img src="assets/Falcon 1.png"
+            alt="Falcon AI"
+            class="logo">
+
+            <h2>FALCON AI</h2>
+
+        </div>
+
+    </nav>
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main-content">
+
+        <h1>
+            Emotional Supporter
+        </h1>
+
+        <p class="subtitle">
+
+            Your Personal Emotional Intelligence Assistant
+
+        </p>
+
+        <!-- HUMANOID SECTION -->
+
+        <section class="humanoid-section" id="humanoid-section">
+
+            <div class="platform"></div>
+
+            <img
+            src="assets/falcon-humanoid.png"
+            alt="Falcon AI Assistant"
+            class="humanoid"
+            id="static-humanoid">
+
+            <!-- AVATAR CONTAINER (hidden until activated) -->
+
+            <div
+            id="avatar-container"
+            class="avatar-container hidden-avatar"
+            role="img"
+            aria-label="Falcon AI interactive avatar">
+
+                <div class="avatar-ring-outer"></div>
+
+                <div class="avatar-ring-inner"></div>
+
+                <div class="avatar-body-wrapper" id="avatar-body">
+
+                    <svg class="avatar-svg" viewBox="0 0 240 340" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+
+                        <defs>
+
+                            <radialGradient id="ambientGlow" cx="50%" cy="40%" r="55%">
+                                <stop offset="0%" stop-color="#00d9ff" stop-opacity="0.12"/>
+                                <stop offset="100%" stop-color="#00d9ff" stop-opacity="0"/>
+                            </radialGradient>
+
+                            <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#00d9ff"/>
+                                <stop offset="100%" stop-color="#007799"/>
+                            </linearGradient>
+
+                            <filter id="glowFilter">
+                                <feGaussianBlur stdDeviation="2" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+
+                        </defs>
+
+                        <circle id="ambient-glow-el" cx="120" cy="155" r="130" fill="url(#ambientGlow)"/>
+
+                        <ellipse id="avatar-body-shape" cx="120" cy="250" rx="58" ry="32" fill="#0a1628" stroke="#00d9ff" stroke-width="1" opacity="0.35"/>
+
+                        <rect id="avatar-neck" x="106" y="218" width="28" height="28" rx="8" fill="#142240"/>
+
+                        <ellipse id="avatar-face" cx="120" cy="170" rx="54" ry="60" fill="#0f1f3d" stroke="#00d9ff" stroke-width="1.5"/>
+
+                        <path id="avatar-hair-main" d="M66 142 Q72 76 120 66 Q168 76 174 142 Q158 88 120 80 Q82 88 66 142" fill="url(#hairGrad)" opacity="0.55"/>
+
+                        <path id="avatar-hair-back" d="M68 148 Q74 86 120 74 Q166 86 172 148 Q158 96 120 88 Q82 96 68 148" fill="#00aacc" opacity="0.25"/>
+
+                        <g id="avatar-eyes-group">
+
+                            <ellipse class="eye-white" id="left-eye-white" cx="98" cy="156" rx="12" ry="13" fill="#0a1628" stroke="#00d9ff" stroke-width="1.2"/>
+
+                            <ellipse class="eye-white" id="right-eye-white" cx="142" cy="156" rx="12" ry="13" fill="#0a1628" stroke="#00d9ff" stroke-width="1.2"/>
+
+                            <circle class="eye-pupil" id="left-pupil" cx="98" cy="156" r="4.5" fill="#00d9ff" filter="url(#glowFilter)"/>
+
+                            <circle class="eye-pupil" id="right-pupil" cx="142" cy="156" r="4.5" fill="#00d9ff" filter="url(#glowFilter)"/>
+
+                        </g>
+
+                        <g id="avatar-brows">
+
+                            <line class="avatar-brow" x1="85" y1="138" x2="111" y2="140" stroke="#00d9ff" stroke-width="2.5" opacity="0.4" stroke-linecap="round"/>
+
+                            <line class="avatar-brow" x1="129" y1="140" x2="155" y2="138" stroke="#00d9ff" stroke-width="2.5" opacity="0.4" stroke-linecap="round"/>
+
+                        </g>
+
+                        <ellipse id="avatar-mouth" cx="120" cy="195" rx="16" ry="5" fill="#00d9ff" opacity="0.55"/>
+
+                    </svg>
+
+                </div>
+
+                <!-- IMAGE-BASED AVATAR (hidden until photo uploaded) -->
+
+                <div
+                id="avatar-image-wrapper"
+                class="avatar-image-wrapper hidden-avatar">
+
+                    <img
+                    id="avatar-image-el"
+                    src=""
+                    alt="Uploaded avatar photo"
+                    class="avatar-image">
+
+                    <div
+                    id="avatar-blink-overlay"
+                    class="avatar-blink-overlay"></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- FEELING SECTION -->
+
+        <section class="emotion-section">
+
+            <h3>
+                How are you feeling today?
+            </h3>
+
+            <div class="emotion-grid">
+
+                <button>😊 Happy</button>
+
+                <button>😌 Calm</button>
+
+                <button>💪 Motivated</button>
+
+                <button>🤔 Thoughtful</button>
+
+                <button>😕 Confused</button>
+
+                <button>😔 Sad</button>
+
+                <button>😫 Overwhelmed</button>
+
+                <button>😤 Frustrated</button>
+
+            </div>
+
+        </section>
+
+        <!-- AI RESPONSE -->
+
+        <section class="chat-history" id="chat-history">
+
+        </section>
+
+        <!-- VOICE VISUALIZER (hidden until AI responds) -->
+
+        <section class="visualizer-section" id="visualizer-section">
+
+            <canvas id="visualizer-canvas"></canvas>
+
+            <p class="visualizer-label" id="visualizer-label">
+                Falcon is responding...
+            </p>
+
+        </section>
+
+        <!-- QUICK TOOLS -->
+
+        <section class="tools-section">
+
+            <button class="tool-btn">
+                Study Motivation
+            </button>
+
+            <button class="tool-btn">
+                Focus Booster
+            </button>
+
+            <button class="tool-btn">
+                Confidence Builder
+            </button>
+
+            <button class="tool-btn">
+                Burnout Recovery
+            </button>
+
+        </section>
+
+        <!-- CHAT INPUT -->
+
+        <section class="chat-section">
+
+            <input
+            id="chat-input"
+            type="text"
+            placeholder="Type a message..."
+            class="chat-input">
+
+            <button id="mic-btn" class="mic-btn" aria-label="Speak to Falcon AI">
+                <svg class="voice-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+            </button>
+
+            <button id="send-btn" class="send-btn">Send</button>
+
+        </section>
+
+        <!-- VOICE HINT (shown below input during voice flow) -->
+
+        <p class="voice-hint" id="voice-hint" style="display:none">Tap to speak</p>
+
+    </main>
+
+    <script src="browser_avatar.js"></script>
+    <script src="emotional.js"></script>
+
+</body>
+
+</html>

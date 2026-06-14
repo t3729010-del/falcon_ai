@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Falcon AI Exam Report</title>
+
+<link rel="stylesheet"
+href="exam-report.css">
+
+</head>
+
+<body>
+
+<div class="background"></div>
+
+<div class="report-container">
+
+    <h1 class="title">
+        Exam Report
+    </h1>
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <h3>Total Questions</h3>
+            <p id="totalQuestions">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Correct</h3>
+            <p id="correctAnswers">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Incorrect</h3>
+            <p id="incorrectAnswers">0</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Unattempted</h3>
+            <p id="unattemptedAnswers">0</p>
+        </div>
+
+    </div>
+
+    <div class="score-card">
+
+        <h2>Percentage</h2>
+
+        <div
+        class="percentage"
+        id="percentage">
+
+            0%
+
+        </div>
+
+        <div
+        class="grade"
+        id="grade">
+
+            A
+
+        </div>
+
+    </div>
+
+    <button
+    class="back-btn"
+    onclick="window.location.href='exam.html'">
+
+        Back To Exam Mode
+
+    </button>
+
+</div>
+
+<script>
+
+const report =
+JSON.parse(
+    sessionStorage.getItem(
+        "examReport"
+    )
+);
+
+if(report){
+
+    document.getElementById(
+        "totalQuestions"
+    ).textContent =
+    report.total;
+
+    document.getElementById(
+        "correctAnswers"
+    ).textContent =
+    report.correct;
+
+    document.getElementById(
+        "incorrectAnswers"
+    ).textContent =
+    report.incorrect;
+
+    document.getElementById(
+        "unattemptedAnswers"
+    ).textContent =
+    report.unattempted;
+
+    document.getElementById(
+        "percentage"
+    ).textContent =
+    report.percentage + "%";
+
+    let grade = "F";
+
+    if(report.percentage >= 90)
+        grade = "A+";
+
+    else if(report.percentage >= 80)
+        grade = "A";
+
+    else if(report.percentage >= 70)
+        grade = "B";
+
+    else if(report.percentage >= 60)
+        grade = "C";
+
+    else if(report.percentage >= 50)
+        grade = "D";
+
+    document.getElementById(
+        "grade"
+    ).textContent =
+    grade;
+}
+
+</script>
+
+</body>
+
+</html>

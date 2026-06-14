@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falcon AI - Practice Report</title>
+    <link rel="stylesheet" href="practice-report.css">
+</head>
+<body>
+
+<div class="space-bg"></div>
+
+<div class="report-container">
+
+    <h1 class="report-title">
+        Practice Session Report
+    </h1>
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <h2 id="attemptedCount">0</h2>
+            <p>Attempted</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="correctCount">0</h2>
+            <p>Correct</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="incorrectCount">0</h2>
+            <p>Incorrect</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="accuracyCount">0%</h2>
+            <p>Accuracy</p>
+        </div>
+
+    </div>
+
+    <div class="review-section">
+
+        <h2>
+            Incorrect Questions Review
+        </h2>
+
+        <div id="reviewContainer">
+
+        </div>
+
+    </div>
+
+    <div class="report-buttons">
+
+        <button onclick="window.location.href='practice.html'">
+            Practice Again
+        </button>
+
+        <button onclick="window.location.href='mcq.html'">
+            Back to MCQ Dashboard
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+const report =
+JSON.parse(
+    sessionStorage.getItem(
+        "practiceReport"
+    )
+);
+
+if(report){
+
+    document.getElementById(
+        "attemptedCount"
+    ).textContent =
+    report.attempted;
+
+    document.getElementById(
+        "correctCount"
+    ).textContent =
+    report.correct;
+
+    document.getElementById(
+        "incorrectCount"
+    ).textContent =
+    report.incorrect;
+
+    document.getElementById(
+        "accuracyCount"
+    ).textContent =
+    report.accuracy + "%";
+
+    const reviewContainer =
+    document.getElementById(
+        "reviewContainer"
+    );
+
+    report.incorrectQuestions.forEach(
+        item => {
+
+            reviewContainer.innerHTML += `
+
+                <div class="review-card">
+
+                    <h3>
+                        ${item.question}
+                    </h3>
+
+                    <p>
+                        <strong>
+                        Your Answer:
+                        </strong>
+
+                        ${item.userAnswer}
+                    </p>
+
+                    <p>
+                        <strong>
+                        Correct Answer:
+                        </strong>
+
+                        ${item.correctAnswer}
+                    </p>
+
+                    <p>
+                        ${item.explanation}
+                    </p>
+
+                </div>
+
+            `;
+        }
+    );
+}
+
+</script>
+
+</body>
+</html>

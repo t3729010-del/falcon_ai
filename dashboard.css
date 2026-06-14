@@ -1,0 +1,370 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+/* BACKGROUND GLOW */
+
+.bg-glow{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    width:800px;
+    height:800px;
+
+    transform:translate(-50%,-50%);
+
+    background:radial-gradient(circle at center, rgba(0,217,255,0.15) 0%, transparent 70%);
+
+    z-index:-1;
+
+    pointer-events:none;
+
+    animation:
+    floatFalcon 6s ease-in-out infinite;
+}
+
+
+body{
+
+    min-height:100vh;
+
+    background:#050816;
+
+    font-family:Arial, sans-serif;
+
+    color:white;
+
+    overflow:hidden;
+}
+
+
+/* NAVBAR */
+
+nav{
+
+    width:100%;
+
+    padding:20px 50px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+}
+
+
+.logo-section{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+}
+
+
+.nav-logo{
+
+    width:60px;
+
+    filter:drop-shadow(0 0 10px #00d9ff);
+}
+
+
+.logo-section h2{
+
+    color:#00d9ff;
+
+    letter-spacing:4px;
+}
+
+
+/* MAIN CONTENT */
+
+.main-content{
+
+    height:80vh;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+}
+/* PARTICLES */
+
+.particles span{
+
+    position:absolute;
+
+    width:4px;
+    height:4px;
+
+    background:#00d9ff;
+
+    border-radius:50%;
+
+    opacity:0.3;
+
+    box-shadow:
+    0 0 10px #00d9ff;
+
+    animation:
+    floatParticles 10s linear infinite;
+}
+.particles span:nth-child(1){
+
+    top:20%;
+    left:15%;
+    animation-duration:8s;
+}
+
+.particles span:nth-child(2){
+
+    top:70%;
+    left:25%;
+    animation-duration:12s;
+}
+
+.particles span:nth-child(3){
+
+    top:40%;
+    left:80%;
+    animation-duration:10s;
+}
+
+.particles span:nth-child(4){
+
+    top:85%;
+    left:60%;
+    animation-duration:14s;
+}
+
+.particles span:nth-child(5){
+
+    top:30%;
+    left:50%;
+    animation-duration:9s;
+}
+
+.particles span:nth-child(6){
+
+    top:60%;
+    left:75%;
+    animation-duration:11s;
+}
+
+.particles span:nth-child(7){
+
+    top:15%;
+    left:65%;
+    animation-duration:13s;
+}
+
+.particles span:nth-child(8){
+
+    top:90%;
+    left:40%;
+    animation-duration:15s;
+}
+@keyframes floatParticles{
+
+    0%{
+
+        transform:
+        translateY(0px);
+
+        opacity:0.2;
+    }
+
+    50%{
+
+        transform:
+        translateY(-20px);
+
+        opacity:0.6;
+    }
+
+    100%{
+
+        transform:
+        translateY(0px);
+
+        opacity:0.2;
+    }
+
+}
+
+
+/* MAIN TITLE */
+
+.main-content h1{
+
+    font-size:60px;
+
+    margin-bottom:20px;
+
+    color:#00d9ff;
+
+    text-shadow:
+    0 0 3px #00d9ff,
+    0 0 8px rgba(0,217,255,0.8),
+    0 0 14px rgba(0,217,255,0.5);
+}
+
+
+/* SUBTITLE */
+
+.subtitle{
+
+    color:#9ca3af;
+
+    margin-bottom:60px;
+
+    letter-spacing:2px;
+}
+
+
+/* CARDS */
+
+.cards-container{
+
+    display:flex;
+
+    gap:40px;
+
+    flex-wrap:wrap;
+
+    justify-content:center;
+}
+
+
+/* SINGLE CARD */
+
+.card{
+
+    width:320px;
+
+    padding:40px 30px;
+
+    background:rgba(255,255,255,0.05);
+
+    border:1px solid rgba(255,255,255,0.1);
+
+    border-radius:25px;
+
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+
+    transition:0.4s;
+
+    box-shadow:
+    0 0 20px rgba(0,217,255,0.1);
+}
+
+
+/* CARD HOVER */
+
+.card:hover{
+
+    transform:translateY(-10px);
+
+    border-color:#00d9ff;
+
+    box-shadow:
+    0 0 30px rgba(0,217,255,0.4);
+}
+
+
+/* CARD TITLE */
+
+.card h2{
+
+    margin-bottom:20px;
+
+    color:#00d9ff;
+}
+
+
+/* CARD TEXT */
+
+.card p{
+
+    color:#d1d5db;
+
+    line-height:1.7;
+
+    margin-bottom:30px;
+}
+
+
+/* BUTTON */
+
+button{
+
+    padding:14px 30px;
+
+    border:none;
+
+    border-radius:30px;
+
+    background:#00d9ff;
+
+    color:#050816;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:0.3s;
+}
+
+
+/* BUTTON HOVER */
+
+button:hover{
+
+    transform:scale(1.05);
+
+    box-shadow:
+    0 0 20px #00d9ff;
+}
+
+/* FLOATING FALCON */
+
+@keyframes floatFalcon{
+
+    0%{
+
+        transform:
+        translate(-50%,-50%)
+        translateY(0px);
+
+    }
+
+    50%{
+
+        transform:
+        translate(-50%,-50%)
+        translateY(-20px);
+
+    }
+
+    100%{
+
+        transform:
+        translate(-50%,-50%)
+        translateY(0px);
+
+    }
+
+}

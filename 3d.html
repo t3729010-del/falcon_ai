@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+    <title>Falcon AI - 3D Teaching</title>
+
+    <link rel="stylesheet"
+    href="3d.css">
+
+</head>
+
+<body>
+    
+    <!-- TOGGLE BUTTON -->
+
+    <button class="menu-toggle" id="menuToggle">
+
+        ☰
+
+    </button>
+
+    <!-- SPACE BACKGROUND -->
+
+    <div class="space-scene">
+
+        <div class="stars"></div>
+
+        <div class="stars stars2"></div>
+
+        <div class="nebula"></div>
+
+    </div>
+
+
+    <!-- FLOATING PARTICLES -->
+
+    <div class="particles">
+
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+
+    </div>
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo-section">
+
+            <img src="../assets/Falcon 1.png" alt="Falcon"
+            class="logo">
+
+            <h2>FALCON AI</h2>
+
+        </div>
+
+
+        <div class="lesson-panel">
+
+            <h3>Lessons</h3>
+
+            <div class="lesson-list" id="lesson-list">
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN AREA -->
+
+    <main class="main-area">
+
+
+        <!-- TOP -->
+
+        <div class="top-bar">
+
+            <h1>3D Teaching</h1>
+
+            <p>
+                Immersive holographic AI learning experience
+            </p>
+
+        </div>
+
+
+        <!-- 3D SECTION -->
+
+        <section class="hologram-section">
+
+
+            <!-- AI BOT -->
+
+            <div class="ai-bot-container">
+
+                <div class="ai-core"></div>
+
+                <div class="ai-ring ring1"></div>
+
+                <div class="ai-ring ring2"></div>
+
+                <div class="ai-ring ring3"></div>
+
+            </div>
+
+
+            <!-- LESSON DISPLAY -->
+
+            <div class="lesson-display">
+
+                <h2>Solar System Simulation</h2>
+
+                <p>
+
+                    Falcon AI is preparing an immersive
+                    holographic explanation of the solar system.
+
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- CONTROLS -->
+
+        <div class="controls">
+
+            <button>Start Lesson</button>
+
+            <button>Voice Mode</button>
+
+            <button>Interactive Mode</button>
+
+        </div>
+
+        <!-- CHAT HISTORY -->
+
+        <section class="chat-history" id="chat-history">
+
+        </section>
+
+        <!-- VOICE VISUALIZER -->
+
+        <section class="visualizer-section" id="visualizer-section">
+
+            <canvas id="visualizer-canvas"></canvas>
+
+            <p class="visualizer-label" id="visualizer-label">
+                Falcon is responding...
+            </p>
+
+        </section>
+
+        <!-- CHAT INPUT -->
+
+        <section class="chat-section">
+
+            <input
+            id="chat-input"
+            type="text"
+            placeholder="Ask Falcon AI anything..."
+            class="chat-input">
+
+            <button id="mic-btn" class="mic-btn" aria-label="Speak to Falcon">
+                <svg class="voice-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+            </button>
+
+            <button id="send-btn" class="send-btn">Send</button>
+
+        </section>
+
+        <p class="voice-hint" id="voice-hint" style="display:none">Tap to speak</p>
+
+    </main>
+    <script src="3d.js"></script>
+
+</body>
+
+</html>
+```

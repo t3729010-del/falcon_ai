@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Falcon AI Practice Mode</title>
+
+<link rel="stylesheet"
+href="practice.css">
+
+</head>
+
+<body>
+
+<div class="background"></div>
+
+<main class="main-content">
+
+    <h1 class="page-title">
+
+        Practice Mode
+
+    </h1>
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+
+            <h2 id="attemptedCount">
+                0
+            </h2>
+
+            <p>Attempted</p>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h2 id="correctCount">
+                0
+            </h2>
+
+            <p>Correct</p>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h2 id="incorrectCount">
+                0
+            </h2>
+
+            <p>Incorrect</p>
+
+        </div>
+
+    </div>
+
+    <div class="question-card">
+
+        <div class="question-number"
+        id ="questionNumber">
+
+            Question 1
+
+        </div>
+
+        <h2
+        class="question"
+        id="questionText">
+
+            Loading Question...
+
+        </h2>
+
+        <div
+        class="options-container"
+        id="optionsContainer">
+
+            <div class="option">
+                Option A
+            </div>
+
+            <div class="option">
+                Option B
+            </div>
+
+            <div class="option">
+                Option C
+            </div>
+
+            <div class="option">
+                Option D
+            </div>
+
+        </div>
+
+        <div class="action-buttons">
+
+            <button
+            class="submit-btn">
+
+                Submit Answer
+
+            </button>
+
+            <button
+            class="next-btn">
+
+                Next Question
+
+            </button>
+
+            <button
+            class="stop-btn" id="stopBtn">
+
+                Stop Session
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="feedback-card">
+
+        <h3>
+
+            Explanation
+
+        </h3>
+
+        <p id="feedbackText">
+
+            Answer a question to receive
+            detailed AI feedback.
+
+        </p>
+
+    </div>
+
+</main>
+
+<script src="practice.js"></script>
+
+</body>
+
+</html>

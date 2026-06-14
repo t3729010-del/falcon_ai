@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falcon AI Report Center</title>
+
+    <link rel="stylesheet" href="report.css">
+</head>
+
+<body>
+
+    <div class="background"></div>
+
+    <!-- TOP BAR -->
+
+    <div class="top-bar">
+
+        <button class="menu-btn" id="menuBtn">
+            ☰
+        </button>
+
+        <div class="top-logo">
+
+            <img src="assets/Falcon 1.png"
+                 alt="Falcon Logo"
+                 class="top-logo-img">
+
+            <div class="top-logo-text">
+                <h2>FALCON</h2>
+                <h2>AI</h2>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <h3 class="history-title">
+            Report History
+        </h3>
+
+        <div class="history-list" id="historyList">
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+
+    <main class="main-content" id="mainContent">
+
+        <h1 class="page-title">
+            Report Center
+        </h1>
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <h2 id="correctCount">0</h2>
+                <p>Correct</p>
+            </div>
+
+            <div class="stat-card">
+                <h2 id="incorrectCount">0</h2>
+                <p>Incorrect</p>
+            </div>
+
+            <div class="stat-card">
+                <h2 id="unattemptedCount">0</h2>
+                <p>Unattempted</p>
+            </div>
+
+            <div class="stat-card">
+                <h2 id="percentageCount">0%</h2>
+                <p>Percentage</p>
+            </div>
+
+        </div>
+
+        <div class="report-card">
+
+            <h2 class="grade-title">
+                Grade
+            </h2>
+
+            <div id="gradeText" class="grade-text">
+                A
+            </div>
+
+            <button id="reviewBtn" class="review-btn">
+                Review Questions
+            </button>
+
+        </div>
+
+    </main>
+
+    <script src="report.js"></script>
+
+</body>
+
+</html>

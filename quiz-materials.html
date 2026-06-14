@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+    <title>Falcon AI - Quiz Materials</title>
+
+    <link rel="stylesheet"
+    href="quiz-materials.css">
+
+</head>
+
+<body>
+
+
+    <!-- SPACE BACKGROUND -->
+
+    <div class="space-bg"></div>
+
+
+    <!-- SIDEBAR -->
+        
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+
+            <button class="menu-btn">
+                ☰
+            </button>
+
+            <div class="logo-area">
+
+                <img src="assets/Falcon 1.png"
+                alt="Falcon AI Logo">
+
+                <div class="logo-text">
+                    <h1>FALCON</h1>
+                    <h1>AI</h1>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="category-section">
+
+            <h2>Material Types</h2>
+
+            <button class="category-btn active">
+                PDF Notes
+            </button>
+
+            <button class="category-btn">
+                Lecture Slides
+            </button>
+
+            <button class="category-btn">
+                Assignments
+            </button>
+
+            <button class="category-btn">
+                Research Papers
+            </button>
+
+            <button class="category-btn">
+                Images & Screenshots
+            </button>
+
+        </div>
+
+        <div class="ai-status">
+
+            <h3>Falcon AI Status</h3>
+
+            <p>
+                AI engine ready for intelligent quiz generation.
+            </p>
+
+            <div class="status-light"></div>
+
+        </div>
+
+    </aside>
+    <!-- MAIN CONTENT -->
+
+    <main class="main-content">
+
+
+        <!-- HERO SECTION -->
+
+        <section class="hero-section">
+
+            <h1>Upload Learning Materials</h1>
+
+            <p>
+
+                Upload your study resources and let Falcon AI generate immersive quizzes automatically.
+
+            </p>
+
+        </section>
+
+
+
+        <!-- UPLOAD AREA -->
+
+        <section class="upload-section">
+
+
+            <!-- DROP ZONE -->
+
+            <div class="upload-box">
+
+                <div class="upload-icon">
+
+                    ⬆
+
+                </div>
+
+                <h2>Drag & Drop Files</h2>
+
+                <p>
+
+                    Upload PDFs, PPT slides, notes, assignments, or images.
+
+                </p>
+
+                <button class="upload-btn">
+                    
+                    <input
+                        type="file"
+                        id="fileInput"
+                        hidden
+                        multiple
+                    >
+                    Choose Files
+
+                </button>
+
+            </div>
+
+
+
+            <!-- AI PROCESSING CARD -->
+
+            <div class="processing-card">
+
+                <h2>AI Processing</h2>
+
+                <p>
+
+                    Falcon AI analyzes uploaded materials and automatically creates intelligent quizzes.
+
+                </p>
+
+                <div class="processing-bar">
+
+                    <div class="processing-fill"></div>
+
+                </div>
+
+                <span>
+
+                    Neural analysis initializing...
+
+                </span>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- MATERIAL HISTORY -->
+
+        <section class="history-section">
+
+            <h2>
+                Recent Materials
+                <span id = "materialCount"></span>
+            </h2>
+
+            <div class = "history-grid"></div>
+
+        </section>
+
+
+
+        <!-- ACTION BUTTONS -->
+
+        <section class="action-buttons">
+
+            <a href="mcq.html">
+
+                <button class="action-btn">
+
+                    Start MCQ Quiz
+
+                </button>
+
+            </a>
+
+
+            <a href="descriptive.html">
+
+                <button class="action-btn">
+
+                    Start Descriptive Quiz
+
+                </button>
+
+            </a>
+
+        </section>
+
+    </main>
+
+    <script src="quiz-materials.js"></script>
+
+</body>
+
+</html>
