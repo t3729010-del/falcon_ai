@@ -1317,12 +1317,12 @@ nav{
 
     margin-top:40px;
     width:100%;
-    max-width:900px;
 
     flex:1;
     min-height:0;
+    overflow-y:auto;
 
-    padding:20px;
+    padding:20px calc(50% - 450px);
 
     display:flex;
 
