@@ -1,5 +1,5 @@
 # Kokoro TTS — Flask Server Integration Guide
-> Arch Linux · CPU-only · LLM response → speech pipeline
+> Arch Linux · CPU-only · uv · LLM response → speech pipeline
 
 ---
 
@@ -15,6 +15,7 @@ CPU, needs no GPU, and produces 24kHz mono WAV audio. You pipe your LLM's text o
 - `numpy` — audio array handling
 - `torch` (CPU) — model backend
 - `flask` + `flask-cors` — HTTP server
+- `uv` — package manager and venv runner
 
 ---
 
@@ -22,28 +23,39 @@ CPU, needs no GPU, and produces 24kHz mono WAV audio. You pipe your LLM's text o
 
 ```bash
 # espeak-ng is required for English phonemization — without it, KPipeline will crash
-sudo pacman -S espeak-ng python python-pip
+sudo pacman -S espeak-ng
 
-# Optional but recommended: CPU torch without CUDA bloat
-# (saves ~2GB of download vs the default CUDA wheel)
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# or via pacman:
+sudo pacman -S uv
 ```
-
-> If you already have `torch` installed (CUDA version), it still works on CPU — just slower
-> to load. Using the CPU-only wheel is leaner for a server that will never touch a GPU.
 
 ---
 
-## 2. Python dependencies
+## 2. Project setup with uv
 
 ```bash
-pip install "kokoro>=0.9.4" soundfile numpy flask flask-cors
+mkdir tts_server && cd tts_server
+
+# Init project (creates pyproject.toml + .venv)
+uv init --no-workspace
+
+# Add dependencies
+# CPU-only torch first — use the PyTorch CPU index to avoid pulling CUDA wheels (~2GB bloat)
+uv add torch --index-url https://download.pytorch.org/whl/cpu
+
+# Rest of the deps
+uv add "kokoro>=0.9.4" soundfile numpy flask flask-cors
 ```
+
+> uv resolves and installs everything into `.venv/` automatically. No manual `venv` or
+> `activate` needed for running scripts.
 
 Verify the install:
 
 ```bash
-python -c "from kokoro import KPipeline; p = KPipeline(lang_code='a'); print('OK')"
+uv run python -c "from kokoro import KPipeline; p = KPipeline(lang_code='a'); print('OK')"
 ```
 
 On first run, Kokoro downloads model weights (~330MB) and voice files from Hugging Face into
@@ -55,10 +67,38 @@ On first run, Kokoro downloads model weights (~330MB) and voice files from Huggi
 
 ```
 tts_server/
-├── app.py          ← Flask server
-├── tts.py          ← Kokoro pipeline wrapper
-└── requirements.txt
+├── pyproject.toml   ← uv project manifest
+├── .venv/           ← managed by uv (don't touch)
+├── app.py           ← Flask server
+└── tts.py           ← Kokoro pipeline wrapper
 ```
+
+`pyproject.toml` will look roughly like:
+
+```toml
+[project]
+name = "tts-server"
+version = "0.1.0"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "kokoro>=0.9.4",
+    "soundfile",
+    "numpy",
+    "flask",
+    "flask-cors",
+    "torch",
+]
+
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "https://download.pytorch.org/whl/cpu" }
+```
+
+> If uv doesn't auto-set the torch index, manually add the `[tool.uv.sources]` block above
+> so it always pulls the CPU wheel.
 
 ---
 
@@ -74,6 +114,10 @@ import numpy as np
 import soundfile as sf
 import torch
 from kokoro import KPipeline
+
+# Tune to your physical core count — big impact on CPU inference speed
+torch.set_num_threads(8)
+torch.set_num_interop_threads(4)
 
 # --------------------------------------------------------------------------
 # Pipeline init — runs once when the module is first imported.
@@ -95,7 +139,7 @@ def synthesize(text: str, voice: str = "af_heart", speed: float = 1.0) -> bytes:
         speed: Speech speed multiplier. 1.0 = normal, 0.8 = slower, 1.2 = faster.
 
     Returns:
-        WAV audio as bytes (24000 Hz, mono, float32).
+        WAV audio as bytes (24000 Hz, mono, PCM_16).
     """
     chunks = []
 
@@ -107,10 +151,8 @@ def synthesize(text: str, voice: str = "af_heart", speed: float = 1.0) -> bytes:
     if not chunks:
         raise ValueError("Kokoro returned no audio — check your text input.")
 
-    # Concatenate all chunks into a single numpy array
     audio_np = np.concatenate(chunks, axis=0)
 
-    # Encode to WAV in memory
     buf = io.BytesIO()
     sf.write(buf, audio_np, samplerate=24000, format="WAV", subtype="PCM_16")
     buf.seek(0)
@@ -119,12 +161,11 @@ def synthesize(text: str, voice: str = "af_heart", speed: float = 1.0) -> bytes:
 
 def synthesize_streaming(text: str, voice: str = "af_heart", speed: float = 1.0):
     """
-    Generator that yields WAV-encoded audio chunks one at a time.
+    Generator that yields raw PCM int16 chunks one at a time.
     Use this for streaming responses — first chunk arrives faster than synthesize().
 
     Yields:
-        bytes — raw PCM int16 samples per chunk (not wrapped in WAV header).
-                Suitable for chunked HTTP transfer or WebSocket streaming.
+        bytes — raw PCM int16 samples per chunk (24000 Hz, mono).
     """
     with torch.no_grad():
         generator = pipeline(text, voice=voice, speed=speed)
@@ -139,10 +180,7 @@ def synthesize_streaming(text: str, voice: str = "af_heart", speed: float = 1.0)
 
 ```python
 # app.py
-import io
-import wave
-import struct
-from flask import Flask, request, jsonify, Response, send_file
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 
 from tts import synthesize, synthesize_streaming
@@ -185,8 +223,7 @@ def tts():
 # ---------------------------------------------------------------------------
 # POST /tts/stream
 # Body: { "text": "...", "voice": "af_heart", "speed": 1.0 }
-# Returns: chunked audio/pcm stream
-# Client reconstructs or plays raw PCM (24000 Hz, mono, int16)
+# Returns: chunked audio/pcm stream (24000 Hz, mono, int16)
 # ---------------------------------------------------------------------------
 @app.route("/tts/stream", methods=["POST"])
 def tts_stream():
@@ -218,7 +255,6 @@ def tts_stream():
 
 # ---------------------------------------------------------------------------
 # GET /voices
-# Returns the list of recommended voices grouped by type
 # ---------------------------------------------------------------------------
 VOICES = {
     "american_female": ["af_heart", "af_bella", "af_sarah", "af_nicole", "af_sky"],
@@ -241,39 +277,26 @@ def health():
 
 
 if __name__ == "__main__":
-    # threaded=False is important — KPipeline is NOT thread-safe.
-    # For concurrent requests use a process-based server (gunicorn) instead.
+    # threaded=False is critical — KPipeline is NOT thread-safe.
+    # For concurrent requests use gunicorn (see section 12).
     app.run(host="0.0.0.0", port=5050, debug=False, threaded=False)
 ```
 
 ---
 
-## 6. `requirements.txt`
-
-```
-kokoro>=0.9.4
-soundfile
-numpy
-flask
-flask-cors
-torch
-```
-
----
-
-## 7. Running the server
+## 6. Running the server
 
 ```bash
 cd tts_server
-python app.py
+uv run python app.py
 ```
 
-On first run you'll see Hugging Face downloading weights (~330MB). After that, startup is
-instant. The pipeline loads into RAM (~500MB–700MB on CPU).
+On first run Hugging Face downloads weights (~330MB). After that, startup is instant.
+The pipeline loads into RAM (~500–700MB on CPU).
 
 ---
 
-## 8. Testing with curl
+## 7. Testing with curl
 
 **Full WAV response:**
 ```bash
@@ -282,13 +305,12 @@ curl -X POST http://localhost:5050/tts \
   -d '{"text": "Hello, this is Kokoro speaking.", "voice": "af_heart", "speed": 1.0}' \
   --output speech.wav
 
-# Play it
 aplay speech.wav
 # or
 mpv speech.wav
 ```
 
-**Streaming (raw PCM):**
+**Streaming (raw PCM → pipe to aplay):**
 ```bash
 curl -X POST http://localhost:5050/tts/stream \
   -H "Content-Type: application/json" \
@@ -303,11 +325,7 @@ curl http://localhost:5050/voices
 
 ---
 
-## 9. Wiring your LLM into the pipeline
-
-The typical flow: your LLM generates text → you POST it to `/tts` → return audio to the
-client. Here's how to call your own Flask TTS server from within another Python service or
-your LLM handler:
+## 8. Wiring your LLM into the pipeline
 
 ```python
 # llm_to_speech.py
@@ -331,7 +349,7 @@ wav = speak("The capital of France is Paris.")
 with open("output.wav", "wb") as f:
     f.write(wav)
 
-# Example: stream directly to aplay via subprocess
+# Example: stream directly to aplay
 import subprocess
 
 def speak_and_play(text: str):
@@ -345,7 +363,7 @@ def speak_and_play(text: str):
 
 ---
 
-## 10. Voices reference
+## 9. Voices reference
 
 | Voice ID      | Gender | Accent    | Quality |
 |---------------|--------|-----------|---------|
@@ -366,46 +384,32 @@ def speak_and_play(text: str):
 
 Full list: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
 
-**Grade A = highest quality.** `af_heart` and `af_bella` are the best starting points for
-English.
+**Grade A = highest quality.** `af_heart` and `af_bella` are the best starting points.
 
 ---
 
-## 11. CPU performance expectations
+## 10. CPU performance expectations
 
-On CPU, generation is slower than real-time for long texts. Rough numbers:
+| Text length | Approx. generation time (CPU) |
+|-------------|-------------------------------|
+| 1 sentence  | ~1–3 seconds                  |
+| 1 paragraph | ~5–15 seconds                 |
+| 500 words   | ~30–60 seconds                |
 
-| Text length   | Approx. generation time (CPU) |
-|---------------|-------------------------------|
-| 1 sentence    | ~1–3 seconds                  |
-| 1 paragraph   | ~5–15 seconds                 |
-| 500 words     | ~30–60 seconds                |
+Kokoro chunks long text automatically — with `/tts/stream` the first chunk arrives in ~1–3s
+regardless of total length, and audio keeps coming while the rest generates.
 
-Kokoro chunks long text automatically — so with `/tts/stream` the first chunk arrives in
-~1–3 seconds regardless of total text length, and audio keeps coming while the rest generates.
-
-**To speed up CPU inference**, set PyTorch thread counts before importing kokoro:
-
-```python
-import torch
-torch.set_num_threads(8)           # match your physical core count
-torch.set_num_interop_threads(4)
-```
-
-Put this at the top of `tts.py`, before the `KPipeline` init.
+`torch.set_num_threads()` in `tts.py` is already set to 8 — adjust to your actual core count.
 
 ---
 
-## 12. Production: gunicorn (multi-process)
-
-`threaded=False` in Flask dev server means only one request at a time. For a real deployment
-use gunicorn with multiple workers (each gets its own pipeline copy in RAM):
+## 11. Production: gunicorn (multi-process)
 
 ```bash
-pip install gunicorn
+uv add gunicorn
 
 # 2 workers = 2 concurrent TTS requests, each using ~600MB RAM
-gunicorn app:app \
+uv run gunicorn app:app \
   --workers 2 \
   --bind 0.0.0.0:5050 \
   --timeout 120 \
@@ -417,7 +421,7 @@ gunicorn app:app \
 
 ---
 
-## 13. Systemd service (optional, for always-on)
+## 12. Systemd service (optional, for always-on)
 
 ```ini
 # /etc/systemd/system/kokoro-tts.service
@@ -429,7 +433,7 @@ After=network.target
 Type=simple
 User=hello
 WorkingDirectory=/home/hello/tts_server
-ExecStart=/usr/bin/python /home/hello/tts_server/app.py
+ExecStart=/home/hello/.local/bin/uv run python app.py
 Restart=on-failure
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
@@ -446,47 +450,53 @@ sudo systemctl status kokoro-tts
 
 ---
 
-## 14. Common errors and fixes
+## 13. Common errors and fixes
 
 | Error | Cause | Fix |
 |-------|-------|-----|
 | `ModuleNotFoundError: espeak` | espeak-ng not installed | `sudo pacman -S espeak-ng` |
-| `RuntimeError: No audio generated` | Empty or whitespace-only text | Validate input before calling pipeline |
-| `OSError: [Errno 98] Address already in use` | Port 5050 taken | Change port or `fuser -k 5050/tcp` |
+| `RuntimeError: No audio generated` | Empty/whitespace text | Validate input before calling pipeline |
+| `OSError: [Errno 98] Address already in use` | Port 5050 taken | `fuser -k 5050/tcp` |
 | First request takes 30+ seconds | Model downloading from HF | Wait once; cached after that |
-| `kokoro` hangs on import | Bad Python version | Requires Python >=3.10, <3.13 |
-| Audio sounds robotic/clipped | Speed too high | Keep speed between 0.7–1.3 |
-| `torch` CUDA errors on CPU box | Wrong torch wheel | Reinstall: `pip install torch --index-url https://download.pytorch.org/whl/cpu` |
+| `kokoro` hangs on import | Wrong Python version | Requires `>=3.10,<3.13` |
+| Audio sounds robotic/clipped | Speed too high | Keep speed between `0.7–1.3` |
+| CUDA errors on CPU box | Wrong torch wheel | `uv add torch --index-url https://download.pytorch.org/whl/cpu` |
+| `uv run` can't find `espeak` | uv venv doesn't inherit PATH | Install espeak-ng system-wide via pacman, not pip |
 
 ---
 
-## 15. Full lang_code reference
+## 14. Full lang_code reference
 
-| Code | Language            |
-|------|---------------------|
-| `a`  | American English    |
-| `b`  | British English     |
-| `j`  | Japanese            |
-| `z`  | Mandarin Chinese    |
-| `f`  | French              |
-| `e`  | Spanish             |
-| `h`  | Hindi               |
-| `p`  | Brazilian Portuguese|
-| `i`  | Italian             |
-| `k`  | Korean              |
+| Code | Language             |
+|------|----------------------|
+| `a`  | American English     |
+| `b`  | British English      |
+| `j`  | Japanese             |
+| `z`  | Mandarin Chinese     |
+| `f`  | French               |
+| `e`  | Spanish              |
+| `h`  | Hindi                |
+| `p`  | Brazilian Portuguese |
+| `i`  | Italian              |
+| `k`  | Korean               |
 
-For Japanese: `pip install misaki[ja]`  
-For Chinese: `pip install misaki[zh]`
+For Japanese: `uv add "misaki[ja]"`
+For Chinese: `uv add "misaki[zh]"`
 
 ---
 
 ## Quick start checklist
 
 ```
-[ ] sudo pacman -S espeak-ng
-[ ] pip install "kokoro>=0.9.4" soundfile numpy flask flask-cors torch
+[ ] sudo pacman -S espeak-ng uv
+[ ] mkdir tts_server && cd tts_server
+[ ] uv init --no-workspace
+[ ] uv add torch --index-url https://download.pytorch.org/whl/cpu
+[ ] uv add "kokoro>=0.9.4" soundfile numpy flask flask-cors
 [ ] Create tts.py and app.py as above
-[ ] python app.py   (first run downloads ~330MB)
-[ ] curl -X POST http://localhost:5050/tts -d '{"text":"hello"}' -H 'Content-Type: application/json' --output out.wav
-[ ] aplay out.wav
+[ ] uv run python app.py   ← first run downloads ~330MB
+[ ] curl -X POST http://localhost:5050/tts \
+      -H 'Content-Type: application/json' \
+      -d '{"text":"hello world"}' \
+      --output out.wav && aplay out.wav
 ```
