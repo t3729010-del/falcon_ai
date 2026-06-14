@@ -1647,12 +1647,7 @@ if(voiceToggleBtn){
         voiceMode = !voiceMode;
         localStorage.setItem("voiceMode", JSON.stringify(voiceMode));
         updateVoiceToggleUI();
-        if(voiceMode){
-            if(!AVATAR.initialized) initializeAvatar();
-            showAvatar();
-        } else {
-            hideAvatar();
-        }
+        if(!voiceMode && AVATAR.enabled) hideAvatar();
         console.log("[VOICE] Voice mode:", voiceMode ? "ON" : "OFF");
     });
     updateVoiceToggleUI();
@@ -1882,11 +1877,6 @@ document.addEventListener(
 
 loadSessions();
 Visualizer.init();
-
-if(voiceMode){
-    if(!AVATAR.initialized) initializeAvatar();
-    showAvatar();
-}
 
 const searchInput = document.getElementById(
     "search-conversations"
