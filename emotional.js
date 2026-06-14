@@ -1438,12 +1438,21 @@ async function sendTextMessage(message){
     chatHistory.appendChild(userBubble);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
-    if(AVATAR.enabled) setAvatarState('listening');
+    if(voiceMode){
+        if(!AVATAR.initialized) initializeAvatar();
+        showAvatar();
+        setAvatarState('listening');
+    } else {
+        if(AVATAR.enabled) setAvatarState('listening');
+    }
 
-    const falconBubble = document.createElement("div");
-    falconBubble.classList.add("falcon-message");
-    falconBubble.textContent = "";
-    chatHistory.appendChild(falconBubble);
+    let falconBubble = null;
+    if(!voiceMode){
+        falconBubble = document.createElement("div");
+        falconBubble.classList.add("falcon-message");
+        falconBubble.textContent = "";
+        chatHistory.appendChild(falconBubble);
+    }
 
     let fullReply = "";
     ttsBuffer = "";
@@ -1477,7 +1486,7 @@ async function sendTextMessage(message){
                     const token = line.slice(6);
                     if(token.trim() === "[DONE]") continue;
                     fullReply += token;
-                    falconBubble.textContent = fullReply;
+                    if(falconBubble) falconBubble.textContent = fullReply;
                     chatHistory.scrollTop = chatHistory.scrollHeight;
                     if(voiceMode) processTTSToken(token);
                 }
@@ -1495,7 +1504,7 @@ async function sendTextMessage(message){
         if(AVATAR.enabled && !voiceMode) handleAIResponse(fullReply);
     }catch(error){
         console.error(error);
-        falconBubble.textContent = "Sorry, something went wrong. Please try again.";
+        if(falconBubble) falconBubble.textContent = "Sorry, something went wrong. Please try again.";
         if(AVATAR.enabled){
             setAvatarState('error');
             setTimeout(() => setAvatarState('idle'), 2000);
@@ -1551,11 +1560,18 @@ function enqueueTTSChunk(text){
 function playNextTTSChunk(){
     if(ttsQueue.length === 0){
         ttsPlaying = false;
-        if(AVATAR.enabled) setAvatarState('idle');
+        if(AVATAR.enabled){
+            stopLipSync();
+            Visualizer.stop();
+            setAvatarState('idle');
+        }
         return;
     }
     ttsPlaying = true;
-    if(AVATAR.enabled) setAvatarState('speaking');
+    if(AVATAR.enabled){
+        setAvatarState('speaking');
+        Visualizer.start();
+    }
     const text = ttsQueue.shift();
     fetch("http://127.0.0.1:5000/tts", {
         method: "POST",
@@ -1569,17 +1585,28 @@ function playNextTTSChunk(){
     .then(blob => {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
+        audio.onplay = () => {
+            if(AVATAR.enabled) startLipSync();
+        };
         audio.onended = () => {
             URL.revokeObjectURL(url);
+            if(AVATAR.enabled) stopLipSync();
             playNextTTSChunk();
         };
         audio.onerror = () => {
             URL.revokeObjectURL(url);
+            if(AVATAR.enabled) stopLipSync();
             playNextTTSChunk();
         };
-        audio.play().catch(() => playNextTTSChunk());
+        audio.play().catch(() => {
+            if(AVATAR.enabled) stopLipSync();
+            playNextTTSChunk();
+        });
     })
-    .catch(() => playNextTTSChunk());
+    .catch(() => {
+        if(AVATAR.enabled) stopLipSync();
+        playNextTTSChunk();
+    });
 }
 
 function processTTSToken(token){
@@ -1620,6 +1647,12 @@ if(voiceToggleBtn){
         voiceMode = !voiceMode;
         localStorage.setItem("voiceMode", JSON.stringify(voiceMode));
         updateVoiceToggleUI();
+        if(voiceMode){
+            if(!AVATAR.initialized) initializeAvatar();
+            showAvatar();
+        } else {
+            hideAvatar();
+        }
         console.log("[VOICE] Voice mode:", voiceMode ? "ON" : "OFF");
     });
     updateVoiceToggleUI();
@@ -1849,6 +1882,11 @@ document.addEventListener(
 
 loadSessions();
 Visualizer.init();
+
+if(voiceMode){
+    if(!AVATAR.initialized) initializeAvatar();
+    showAvatar();
+}
 
 const searchInput = document.getElementById(
     "search-conversations"

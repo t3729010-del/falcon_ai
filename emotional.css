@@ -292,18 +292,22 @@ body{
 
 .avatar-container{
     position:absolute;
-    inset:0;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-60%);
+    width:300px;
+    height:380px;
     display:flex;
     align-items:center;
     justify-content:center;
     z-index:5;
     opacity:1;
+    pointer-events:none;
     transition:opacity 0.6s ease;
 }
 
 .avatar-container.hidden-avatar{
     opacity:0;
-    pointer-events:none;
 }
 
 .avatar-body-wrapper{
@@ -1111,6 +1115,7 @@ nav{
     align-items:center;
     height:calc(100vh - 80px);
     overflow-y:auto;
+    position:relative;
     scrollbar-width:thin;
     scrollbar-color:rgba(0,217,255,0.3) transparent;
 }
@@ -1378,6 +1383,8 @@ nav{
     flex-shrink:0;
     width:100%;
     max-width:900px;
+    position:relative;
+    z-index:10;
 }
 
 .chat-input{
