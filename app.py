@@ -1778,7 +1778,7 @@ def tts():
 
         output_path = "/tmp/falcon_tts.wav"
         result = subprocess.run(
-            ["espeak-ng", "-v", "en", "-s", "160", "-p", "50", "-w", output_path, text],
+            ["espeak-ng", "-v", "en", "-s", "130", "-p", "50", "-w", output_path, text],
             capture_output=True, timeout=30
         )
         if result.returncode != 0:
