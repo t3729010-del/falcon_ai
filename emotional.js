@@ -1419,45 +1419,64 @@ async function sendTextMessage(message){
         currentSession = data.session_id;
         await loadSessions();
     }
+
+    const userBubble = document.createElement("div");
+    userBubble.classList.add("user-message");
+    userBubble.textContent = message;
+    chatHistory.appendChild(userBubble);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
     if(AVATAR.enabled) setAvatarState('listening');
+
+    const falconBubble = document.createElement("div");
+    falconBubble.classList.add("falcon-message");
+    falconBubble.textContent = "";
+    chatHistory.appendChild(falconBubble);
+
+    let fullReply = "";
+
     try{
         if(AVATAR.enabled) setAvatarState('thinking');
         const response = await fetch(
-            "http://127.0.0.1:5000/chat",
+            "http://127.0.0.1:5000/chat-stream",
             {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
                     session_id: currentSession,
-                    message: message,
-                    history: []
+                    message: message
                 })
             }
         );
-        const data = await response.json();
-        const sessionElement = document.querySelector(
-            `.session-item[data-id="${currentSession}"]`
-        );
-        if(sessionElement && data.title){
-            sessionElement.querySelector(".session-title").textContent = data.title;
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while(true){
+            const {done, value} = await reader.read();
+            if(done) break;
+            const chunk = decoder.decode(value);
+            const lines = chunk.split("\n");
+            for(const line of lines){
+                if(line.startsWith("data: ")){
+                    const token = line.slice(6);
+                    if(token.trim() === "[DONE]") continue;
+                    fullReply += token;
+                    falconBubble.textContent = fullReply;
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                }
+            }
         }
-        const userBubble = document.createElement("div");
-        userBubble.classList.add("user-message");
-        userBubble.textContent = message;
-        chatHistory.appendChild(userBubble);
-        const falconBubble = document.createElement("div");
-        falconBubble.classList.add("falcon-message");
-        falconBubble.textContent = data.reply;
-        chatHistory.appendChild(falconBubble);
+
         if(!conversations[currentSession]) conversations[currentSession] = [];
         if(currentSession){
-            conversations[currentSession].push({user: message, falcon: data.reply});
+            conversations[currentSession].push({user: message, falcon: fullReply});
             localStorage.setItem("falconConversations", JSON.stringify(conversations));
         }
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-        if(AVATAR.enabled) handleAIResponse(data.reply);
+
+        if(AVATAR.enabled) handleAIResponse(fullReply);
         else{
-            const speech = new SpeechSynthesisUtterance(data.reply);
+            const speech = new SpeechSynthesisUtterance(fullReply);
             speech.lang = "en-US";
             speech.rate = 1;
             speech.pitch = 1;
@@ -1465,6 +1484,7 @@ async function sendTextMessage(message){
         }
     }catch(error){
         console.error(error);
+        falconBubble.textContent = "Sorry, something went wrong. Please try again.";
         if(AVATAR.enabled){
             setAvatarState('error');
             setTimeout(() => setAvatarState('idle'), 2000);
