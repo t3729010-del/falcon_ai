@@ -106,11 +106,9 @@ from werkzeug.utils import secure_filename
 import os
 from database import save_memory, find_memory
 
-# Load .env file from Falcon_AI root folder
 from pathlib import Path
 
-# Load .env file from Falcon_AI root folder
-env_path = Path(__file__).parent.parent / ".env"
+env_path = Path(__file__).parent / ".env"
 load_dotenv(env_path)
 
 # Get API key
@@ -259,7 +257,8 @@ def generate_reply_stream(prompt):
             if token:
                 full_reply += token
                 yield f"data: {token}\n\n"
-        except (json.JSONDecodeError, KeyError, IndexError):
+        except (json.JSONDecodeError, KeyError, IndexError) as e:
+            print(f"[OpenRouter] Warning: failed to parse chunk: {e} | payload={payload[:200]}")
             continue
 
     yield "data: [DONE]\n\n"
