@@ -608,6 +608,17 @@ const AVATAR = {
     els: {}
 };
 
+// Check speechSynthesis availability
+if(window.speechSynthesis){
+    const voices = window.speechSynthesis.getVoices();
+    console.log("[TTS] speechSynthesis available, initial voices count:", voices.length);
+    window.speechSynthesis.onvoiceschanged = () => {
+        console.log("[TTS] speechSynthesis voices changed, count:", window.speechSynthesis.getVoices().length);
+    };
+} else {
+    console.warn("[TTS] speechSynthesis NOT available in this browser");
+}
+
 function initializeAvatar(){
 
     if(AVATAR.initialized) return;
@@ -637,6 +648,8 @@ function initializeAvatar(){
 }
 
 function showAvatar(){
+    console.log("[TTS] showAvatar() called, AVATAR.initialized=", AVATAR.initialized,
+        "AVATAR.enabled (before)=", AVATAR.enabled);
 
     if(!AVATAR.initialized) initializeAvatar();
 
@@ -658,6 +671,7 @@ function showAvatar(){
     setAvatarState('idle');
     startIdleAnimation();
 
+    console.log("[TTS] showAvatar() complete, AVATAR.enabled=", AVATAR.enabled);
 }
 
 function hideAvatar(){
@@ -849,18 +863,23 @@ function stopIdleAnimation(){
 // =========================
 
 function speakResponse(text){
-
-    if(!AVATAR.enabled) return;
+    console.warn("[TTS] speakResponse called (dead code — should not happen)");
+    if(!AVATAR.enabled){
+        console.warn("[TTS] speakResponse: AVATAR not enabled, returning");
+        return;
+    }
 
     if(!text || typeof text !== 'string'){
-
+        console.warn("[TTS] speakResponse: invalid text", text);
         setAvatarState('error');
         setTimeout(() => setAvatarState('idle'),1500);
         return;
-
     }
 
+    console.log("[TTS] speakResponse: text length=", text.length);
+
     if(AVATAR.tts.speaking){
+        console.log("[TTS] speakResponse: cancelling previous speech");
         AVATAR.tts.cancel();
     }
 
@@ -871,59 +890,68 @@ function speakResponse(text){
     utterance.pitch = 1;
 
     utterance.onstart = () => {
-
+        console.log("[TTS] speakResponse: speech started");
         startLipSync();
         setAvatarState('speaking');
-
     };
 
     utterance.onend = () => {
-
+        console.log("[TTS] speakResponse: speech ended");
         stopLipSync();
         setAvatarState('idle');
-
     };
 
-    utterance.onerror = () => {
-
+    utterance.onerror = (err) => {
+        console.error("[TTS] speakResponse: speech error:", err);
         stopLipSync();
         setAvatarState('error');
-
         setTimeout(() => setAvatarState('idle'),2000);
-
     };
 
     AVATAR.utterance = utterance;
 
+    console.log("[TTS] speakResponse: calling speechSynthesis.speak()");
     AVATAR.tts.speak(utterance);
 
 }
 
 function handleAIResponse(responseText){
-    if(!AVATAR.enabled) return;
+    console.log("[TTS] handleAIResponse entered, AVATAR.enabled=", AVATAR.enabled, "text length=", responseText.length);
+    if(!AVATAR.enabled){
+        console.warn("[TTS] handleAIResponse: AVATAR not enabled, returning");
+        return;
+    }
+    console.log("[TTS] handleAIResponse: speaking via browser speechSynthesis");
     setAvatarState('speaking');
     Visualizer.start();
-    if(AVATAR.tts.speaking) AVATAR.tts.cancel();
+    if(AVATAR.tts.speaking){
+        console.log("[TTS] handleAIResponse: cancelling previous speech");
+        AVATAR.tts.cancel();
+    }
     const utterance = new SpeechSynthesisUtterance(responseText);
     utterance.lang = 'en-US';
     utterance.rate = 1;
     utterance.pitch = 1;
     utterance.onstart = () => {
+        console.log("[TTS] handleAIResponse: speech started");
         startLipSync();
         setAvatarState('speaking');
     };
     utterance.onend = () => {
+        console.log("[TTS] handleAIResponse: speech ended");
         stopLipSync();
         Visualizer.stop();
         setAvatarState('idle');
     };
-    utterance.onerror = () => {
+    utterance.onerror = (err) => {
+        console.error("[TTS] handleAIResponse: speech error:", err);
         stopLipSync();
         Visualizer.stop();
         setAvatarState('error');
         setTimeout(() => setAvatarState('idle'), 2000);
     };
     AVATAR.utterance = utterance;
+    console.log("[TTS] handleAIResponse: calling speechSynthesis.speak()");
     AVATAR.tts.speak(utterance);
 }
 
@@ -1058,6 +1086,8 @@ avatarDropdown.addEventListener('click',(e) => {
 
     closeDropdown();
 
+    console.log("[TTS] Avatar dropdown action:", action, "AVATAR.enabled was:", AVATAR.enabled);
+
     if(action === 'cancel') return;
 
     if(action === 'default'){
@@ -1071,6 +1101,7 @@ avatarDropdown.addEventListener('click',(e) => {
         if(!AVATAR.enabled){
 
             showAvatar();
+            console.log("[TTS] Avatar activated (default)");
 
             avatarToggleBtn.setAttribute(
                 'aria-label',
@@ -1079,6 +1110,8 @@ avatarDropdown.addEventListener('click',(e) => {
 
             avatarToggleBtn.title = 'Deactivate Avatar';
 
+        } else {
+            console.log("[TTS] Avatar already enabled");
         }
 
         return;
@@ -1093,6 +1126,7 @@ avatarDropdown.addEventListener('click',(e) => {
     if(action === 'deactivate'){
 
         hideAvatar();
+        console.log("[TTS] Avatar deactivated");
 
         avatarToggleBtn.setAttribute(
             'aria-label',
@@ -1506,6 +1540,9 @@ document.getElementById(
 async function sendTextMessage(message){
     if(!message) return;
 
+    console.log("[TTS] sendTextMessage entered, message=", JSON.stringify(message.slice(0,50)),
+        "voiceMode=", voiceMode, "AVATAR.enabled=", AVATAR.enabled, "AVATAR.initialized=", AVATAR.initialized);
+
     const emotionSection = document.querySelector(".emotion-section");
     const heroH1 = document.querySelector(".main-content h1");
     const heroSub = document.querySelector(".subtitle");
@@ -1550,6 +1587,8 @@ async function sendTextMessage(message){
     ttsBuffer = "";
     ttsQueue = [];
     ttsPlaying = false;
+    sseLineBuffer = "";
+    console.log("[TTS] State reset: ttsBuffer empty, ttsQueue empty, ttsPlaying false");
 
     try{
         if(AVATAR.enabled) setAvatarState('thinking');
@@ -1565,27 +1604,50 @@ async function sendTextMessage(message){
             }
         );
 
+        console.log("[TTS] chat-stream response status:", response.status, response.statusText);
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let readCount = 0;
 
         while(true){
             const {done, value} = await reader.read();
             if(done) break;
+            readCount++;
             const chunk = decoder.decode(value);
-            const lines = chunk.split("\n");
+            // Prepend any leftover from previous read
+            const fullData = sseLineBuffer + chunk;
+            const lines = fullData.split("\n");
+            // Last element may be incomplete — save it for next read
+            sseLineBuffer = lines.pop() || "";
             for(const line of lines){
                 if(line.startsWith("data: ")){
                     const token = line.slice(6);
-                    if(token.trim() === "[DONE]") continue;
+                    if(token.trim() === "[DONE]"){
+                        console.log("[TTS] SSE [DONE] received, total reads:", readCount, "fullReply length:", fullReply.length);
+                        continue;
+                    }
                     fullReply += token;
                     if(falconBubble) falconBubble.textContent = fullReply;
                     chatHistory.scrollTop = chatHistory.scrollHeight;
-                    if(voiceMode) processTTSToken(token);
+                    if(voiceMode){
+                        console.log("[TTS] -> processTTSToken token:", JSON.stringify(token));
+                        processTTSToken(token);
+                    } else {
+                        console.log("[TTS] Skipping processTTSToken — voiceMode is false");
+                    }
+                } else if(line.trim() !== ""){
+                    console.log("[TTS] SSE non-data line (partial/discarded?):", JSON.stringify(line.slice(0,80)));
                 }
             }
         }
 
-        if(voiceMode) flushTTSBuffer();
+        console.log("[TTS] Stream ended. sseLineBuffer leftover:", JSON.stringify(sseLineBuffer), "voiceMode=", voiceMode);
+
+        if(voiceMode) {
+            console.log("[TTS] Calling flushTTSBuffer...");
+            flushTTSBuffer();
+        }
 
         if(!conversations[currentSession]) conversations[currentSession] = [];
         if(currentSession){
@@ -1593,9 +1655,14 @@ async function sendTextMessage(message){
             localStorage.setItem("falconConversations", JSON.stringify(conversations));
         }
 
-        if(AVATAR.enabled && !voiceMode) handleAIResponse(fullReply);
+        if(AVATAR.enabled && !voiceMode) {
+            console.log("[TTS] Calling handleAIResponse for browser speechSynthesis, text length:", fullReply.length);
+            handleAIResponse(fullReply);
+        } else {
+            console.log("[TTS] handleAIResponse NOT called — AVATAR.enabled=", AVATAR.enabled, "voiceMode=", voiceMode);
+        }
     }catch(error){
-        console.error(error);
+        console.error("[TTS] sendTextMessage CATCH:", error);
         if(falconBubble) falconBubble.textContent = "Sorry, something went wrong. Please try again.";
         if(AVATAR.enabled){
             setAvatarState('error');
@@ -1621,6 +1688,7 @@ chatInput.addEventListener("keydown", (e) => {
 // =========================
 
 let voiceMode = JSON.parse(localStorage.getItem("voiceMode")) || false;
+console.log("[TTS] voiceMode initial:", voiceMode, "| localStorage voiceMode:", localStorage.getItem("voiceMode"));
 let isRecording = false;
 let mediaRecorder = null;
 let audioChunks = [];
@@ -1636,22 +1704,36 @@ const TTS_MIN_CHUNK = 60;
 const TTS_MAX_CHUNK = 200;
 const TTS_SENTENCE_RE = /[^.!?,;:]+[.!?,;:]+/g;
 
+// Buffer for partial SSE lines across read() calls
+let sseLineBuffer = "";
+
 function flushTTSBuffer(){
     const remaining = ttsBuffer.trim();
+    console.log("[TTS] flushTTSBuffer: remaining=", JSON.stringify(remaining));
     ttsBuffer = "";
     if(remaining) enqueueTTSChunk(remaining);
 }
 
 function enqueueTTSChunk(text){
     const clean = text.trim();
-    if(!clean) return;
+    if(!clean) {
+        console.log("[TTS] enqueueTTSChunk: empty text, skipping");
+        return;
+    }
     ttsQueue.push(clean);
-    if(!ttsPlaying) playNextTTSChunk();
+    console.log("[TTS] enqueueTTSChunk: queued text=", JSON.stringify(clean.slice(0,80)),
+        "queueLen=", ttsQueue.length, "ttsPlaying=", ttsPlaying);
+    if(!ttsPlaying) {
+        console.log("[TTS] enqueueTTSChunk: not playing, calling playNextTTSChunk");
+        playNextTTSChunk();
+    }
 }
 
 function playNextTTSChunk(){
+    console.log("[TTS] playNextTTSChunk: queueLen=", ttsQueue.length, "ttsPlaying=", ttsPlaying);
     if(ttsQueue.length === 0){
         ttsPlaying = false;
+        console.log("[TTS] playNextTTSChunk: queue empty, stopping");
         if(AVATAR.enabled){
             stopLipSync();
             Visualizer.stop();
@@ -1665,19 +1747,26 @@ function playNextTTSChunk(){
         Visualizer.startPreparing();
     }
     const text = ttsQueue.shift();
+    console.log("[TTS] Fetching /tts with text:", JSON.stringify(text.slice(0,100)));
     fetch("http://127.0.0.1:5000/tts", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({text: text})
     })
     .then(resp => {
-        if(!resp.ok) throw new Error("TTS failed");
+        console.log("[TTS] /tts response status:", resp.status, resp.statusText);
+        if(!resp.ok) throw new Error("TTS failed: " + resp.status);
         return resp.blob();
     })
     .then(blob => {
+        console.log("[TTS] /tts blob size:", blob.size, "type:", blob.type);
+        if(blob.size < 100) {
+            console.warn("[TTS] /tts blob suspiciously small!");
+        }
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         audio.onplay = () => {
+            console.log("[TTS] Audio playback started");
             if(AVATAR.enabled) {
                 setAvatarState('speaking');
                 Visualizer.start(audio);   // pass real audio element
@@ -1685,41 +1774,57 @@ function playNextTTSChunk(){
             }
         };
         audio.onended = () => {
+            console.log("[TTS] Audio ended — playing next chunk");
             URL.revokeObjectURL(url);
             if(AVATAR.enabled) stopLipSync();
             playNextTTSChunk();
         };
-        audio.onerror = () => {
+        audio.onerror = (err) => {
+            console.error("[TTS] Audio error:", err);
             URL.revokeObjectURL(url);
             if(AVATAR.enabled) stopLipSync();
             playNextTTSChunk();
         };
-        audio.play().catch(() => {
+        audio.play().catch(err => {
+            console.error("[TTS] audio.play() rejected:", err);
             if(AVATAR.enabled) stopLipSync();
             playNextTTSChunk();
         });
     })
-    .catch(() => {
+    .catch(err => {
+        console.error("[TTS] /tts fetch or blob error:", err);
         if(AVATAR.enabled) stopLipSync();
         playNextTTSChunk();
     });
 }
 
 function processTTSToken(token){
-    if(!voiceMode) return;
+    if(!voiceMode) {
+        console.warn("[TTS] processTTSToken called but voiceMode is false — bug?");
+        return;
+    }
     ttsBuffer += token;
+    console.log("[TTS] processTTSToken: token=", JSON.stringify(token),
+        "bufferLen=", ttsBuffer.length, "buffer=", JSON.stringify(ttsBuffer.slice(-50)));
     let match;
     while((match = TTS_SENTENCE_RE.exec(ttsBuffer)) !== null){
         const endIdx = match.index + match[0].length;
+        console.log("[TTS] Sentence match at index", match.index, "endIdx=", endIdx,
+            "matched=", JSON.stringify(match[0].slice(0,40)),
+            "TTS_MIN_CHUNK=", TTS_MIN_CHUNK);
         if(endIdx >= TTS_MIN_CHUNK){
             const chunk = ttsBuffer.slice(0, endIdx);
             ttsBuffer = ttsBuffer.slice(endIdx);
+            console.log("[TTS] Enqueueing sentence chunk:", JSON.stringify(chunk.slice(0,80)));
             enqueueTTSChunk(chunk);
             TTS_SENTENCE_RE.lastIndex = 0;
             break;
+        } else {
+            console.log("[TTS] Sentence too short (", endIdx, "<", TTS_MIN_CHUNK, "), waiting for more");
         }
     }
     if(ttsBuffer.length >= TTS_MAX_CHUNK){
+        console.log("[TTS] Force enqueue at MAX_CHUNK:", ttsBuffer.length);
         enqueueTTSChunk(ttsBuffer);
         ttsBuffer = "";
     }
@@ -1740,11 +1845,16 @@ function updateVoiceToggleUI(){
 
 if(voiceToggleBtn){
     voiceToggleBtn.addEventListener("click", () => {
-        voiceMode = !voiceMode;
+        const newVal = !voiceMode;
+        console.log("[TTS] Voice toggle clicked: voiceMode", voiceMode, "->", newVal);
+        voiceMode = newVal;
         localStorage.setItem("voiceMode", JSON.stringify(voiceMode));
         updateVoiceToggleUI();
-        if(!voiceMode && AVATAR.enabled) hideAvatar();
-        console.log("[VOICE] Voice mode:", voiceMode ? "ON" : "OFF");
+        if(!voiceMode && AVATAR.enabled) {
+            console.log("[TTS] Voice toggled off — hiding avatar");
+            hideAvatar();
+        }
+        console.log("[TTS] Voice mode is now:", voiceMode ? "ON" : "OFF");
     });
     updateVoiceToggleUI();
 }
